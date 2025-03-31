@@ -1,0 +1,26 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  
+[dev]
+  functions = "netlify/functions"
+
+# Odstraňuji špatný redirect - tento způsobuje problémy
+# [[redirects]]
+#   from = "/.netlify/functions/*"
+#   to = "/.netlify/functions/:splat"
+#   status = 200
+#   force = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[template.environment]
+  ADMIN_EMAIL = "honzamazoch@email.cz"

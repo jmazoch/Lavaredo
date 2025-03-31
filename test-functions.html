@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Netlify Functions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357ab8;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Netlify Functions</h1>
+    <p>Klikněte na tlačítka níže pro otestování Netlify funkcí:</p>
+    
+    <div>
+        <button id="testFunction">Test základní funkce</button>
+        <button id="testSubmitOrder">Test submit-order funkce</button>
+        <button id="testAdminOrders">Test admin-orders funkce</button>
+    </div>
+    
+    <div class="result">
+        <h3>Výsledek:</h3>
+        <pre id="result">Zde se zobrazí výsledek...</pre>
+    </div>
+    
+    <script>
+        document.getElementById('testFunction').addEventListener('click', async function() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = 'Načítání...';
+            
+            try {
+                const response = await fetch('/.netlify/functions/test-function');
+                const result = await response.json();
+                
+                resultElement.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultElement.textContent = 'Chyba: ' + error.message;
+            }
+        });
+        
+        document.getElementById('testSubmitOrder').addEventListener('click', async function() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = 'Načítání...';
+            
+            try {
+                const testData = {
+                    id: "TEST-" + Date.now(),
+                    customer: "Test Customer",
+                    email: "test@example.com",
+                    phone: "+420 123 456 789",
+                    date: new Date().toISOString(),
+                    items: [
+                        { name: "Test Product", gender: "Men", size: "L" }
+                    ],
+                    status: "preordered"
+                };
+                
+                const response = await fetch('/.netlify/functions/submit-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    resultElement.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    resultElement.textContent = 'Chyba: ' + response.status + ' ' + response.statusText;
+                    
+                    try {
+                        const errorText = await response.text();
+                        resultElement.textContent += '\n\n' + errorText;
+                    } catch (e) {}
+                }
+            } catch (error) {
+                resultElement.textContent = 'Chyba: ' + error.message;
+            }
+        });
+        
+        document.getElementById('testAdminOrders').addEventListener('click', async function() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = 'Načítání...';
+            
+            try {
+                const response = await fetch('/.netlify/functions/admin-orders');
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    resultElement.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    resultElement.textContent = 'Chyba: ' + response.status + ' ' + response.statusText;
+                    
+                    try {
+                        const errorText = await response.text();
+                        resultElement.textContent += '\n\n' + errorText;
+                    } catch (e) {}
+                }
+            } catch (error) {
+                resultElement.textContent = 'Chyba: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

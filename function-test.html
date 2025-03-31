@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Functions Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 30px; }
+        .test-section {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+        .test-box {
+            margin: 20px 0;
+        }
+        .url-display {
+            font-family: monospace;
+            padding: 10px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #3a80d2;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            overflow: auto;
+            min-height: 50px;
+        }
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .success { color: #2e7d32; }
+        .error { color: #c62828; }
+    </style>
+</head>
+<body>
+    <h1>Netlify Functions Test Page</h1>
+    <p>Use this page to test if your Netlify Functions are working correctly.</p>
+    
+    <div class="test-section">
+        <h2>1. Test Basic Function</h2>
+        <div class="test-box">
+            <div class="url-display">/.netlify/functions/test-function</div>
+            <button id="testFunction">Test Function</button>
+            <div class="status" id="functionStatus"></div>
+            <pre class="result" id="functionResult">Results will appear here...</pre>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test API Redirect</h2>
+        <div class="test-box">
+            <div class="url-display">/api/test-function</div>
+            <button id="testRedirect">Test API Redirect</button>
+            <div class="status" id="redirectStatus"></div>
+            <pre class="result" id="redirectResult">Results will appear here...</pre>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Admin Orders Function</h2>
+        <div class="test-box">
+            <div class="url-display">/.netlify/functions/admin-orders</div>
+            <button id="testAdminOrders">Test Admin Orders</button>
+            <div class="status" id="adminStatus"></div>
+            <pre class="result" id="adminResult">Results will appear here...</pre>
+        </div>
+    </div>
+    
+    <script>
+        // Function to perform test and display results
+        async function testEndpoint(url, resultElement, statusElement) {
+            statusElement.textContent = "Testing...";
+            statusElement.className = "status";
+            resultElement.textContent = "Fetching results...";
+            
+            try {
+                console.log(`Testing URL: ${url}`);
+                const startTime = Date.now();
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (response.ok) {
+                    try {
+                        const data = await response.json();
+                        statusElement.textContent = `Success! (${duration}ms)`;
+                        statusElement.className = "status success";
+                        resultElement.textContent = JSON.stringify(data, null, 2);
+                    } catch (parseError) {
+                        const text = await response.text();
+                        statusElement.textContent = `Got response but couldn't parse JSON (${duration}ms)`;
+                        statusElement.className = "status error";
+                        resultElement.textContent = text;
+                    }
+                } else {
+                    statusElement.textContent = `Error ${response.status}: ${response.statusText} (${duration}ms)`;
+                    statusElement.className = "status error";
+                    
+                    try {
+                        const errorText = await response.text();
+                        resultElement.textContent = errorText || "No response body";
+                    } catch (e) {
+                        resultElement.textContent = "Could not read response body";
+                    }
+                }
+            } catch (error) {
+                statusElement.textContent = `Network Error: ${error.message}`;
+                statusElement.className = "status error";
+                resultElement.textContent = "Failed to connect. Check browser console for details.";
+                console.error("Test error:", error);
+            }
+        }
+        
+        // Set up test button handlers
+        document.getElementById('testFunction').addEventListener('click', function() {
+            testEndpoint(
+                '/.netlify/functions/test-function',
+                document.getElementById('functionResult'),
+                document.getElementById('functionStatus')
+            );
+        });
+        
+        document.getElementById('testRedirect').addEventListener('click', function() {
+            testEndpoint(
+                '/api/test-function',
+                document.getElementById('redirectResult'),
+                document.getElementById('redirectStatus')
+            );
+        });
+        
+        document.getElementById('testAdminOrders').addEventListener('click', function() {
+            testEndpoint(
+                '/.netlify/functions/admin-orders',
+                document.getElementById('adminResult'),
+                document.getElementById('adminStatus')
+            );
+        });
+    </script>
+</body>
+</html>

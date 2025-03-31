@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Pre-order - Lavaredo</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/cart.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script>
+        // Modified authentication check for cart page - only block admin users
+        (function() {
+            console.log('Cart authentication check running');
+            try {
+                // Check if the user is an admin (admins shouldn't access cart)
+                const userData = localStorage.getItem('loggedInUser');
+                
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.isAdmin) {
+                        console.log('Admin user detected - redirecting away from cart');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+                
+                // All other users (including anonymous) can access the cart
+                console.log('Non-admin user - showing cart page');
+                
+            } catch (e) {
+                console.error('Authentication error:', e);
+                // No need to redirect - if there's an error, just show the page
+            }
+        })();
+    </script>
+</head>
+<body class="cart-page">
+    <!-- Simplified Header with back button only -->
+    <header class="cart-header">
+        <div class="container">
+            <div class="back-button-container">
+                <a href="index.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Zpátky
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="cart-main" id="pageContent">
+        <div class="container">
+            <h1>Your Pre-order</h1>
+            
+            <div class="cart-content">
+                <div class="cart-items-container">
+                    <div class="cart-header">
+                        <div class="cart-header-item">Item</div>
+                        <div class="cart-header-size">Size</div>
+                        <div class="cart-header-actions">Actions</div>
+                    </div>
+                    
+                    <div id="cartItemsList" class="cart-items-list">
+                        <!-- Will be populated by JS -->
+                        <div class="cart-empty-message">Your pre-order list is empty.</div>
+                    </div>
+                </div>
+                
+                <div class="cart-sidebar">
+                    <div class="cart-summary">
+                        <h2>Pre-order Summary</h2>
+                        <div class="summary-item">
+                            <span>Total Items:</span>
+                            <span id="summaryTotalItems">0</span>
+                        </div>
+                        
+                        <!-- Customer Information Form -->
+                        <div class="customer-info-form">
+                            <h3>Your Contact Details</h3>
+                            <div class="form-group">
+                                <label for="customerName">Full Name</label>
+                                <input type="text" id="customerName" placeholder="Your full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerEmail">Email</label>
+                                <input type="email" id="customerEmail" placeholder="your@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPhone">Phone Number</label>
+                                <input type="tel" id="customerPhone" placeholder="+420 xxx xxx xxx">
+                            </div>
+                        </div>
+                        
+                        <div class="summary-note">
+                            <p>This is a pre-order for custom cycling apparel. No payment is required at this time.</p>
+                            <p>After submitting your pre-order, our team will contact you with details.</p>
+                        </div>
+                        <button id="preorderBtn" class="preorder-btn">Submit Pre-order</button>
+                        <button id="continueShoppingBtn" class="continue-shopping-btn">Continue Shopping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pre-order Success Modal - Now properly hidden by default -->
+    <div id="successModal" class="modal" style="display: none;">
+        <div class="modal-content success-modal">
+            <span class="close-modal">&times;</span>
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Pre-order Submitted!</h2>
+            <p>Thank you for your pre-order. Our team will review your request and contact you shortly.</p>
+            <p>Your pre-order number: <span id="orderNumber"></span></p>
+            <button id="returnToShopBtn" class="return-btn">Return to Shop</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-logo">
+                        <img src="logos/lavaredo_logo.png" alt="Lavaredo">
+                    </div>
+                    <p>Showcasing the finest cycling jersey designs</p>
+                    <p>Email: info@lavaredo.com</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Follow Us</h3>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/lavaredo.cc/">Instagram</a>
+                        <a href="https://strava.app.link/rJVl9icTJRb">Strava</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 Lavaredo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/account.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/cart-debug.js"></script>
+    <script src="js/fix-cart-navigation.js"></script>
+</body>
+</html>

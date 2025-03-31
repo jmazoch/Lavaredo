@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - lavaredo.cc</title>
+    
+    <!-- Add this at the top of your file, right after the <head> tag -->
+    <script>
+        // Immediate authentication check - hide the page until verified
+        document.documentElement.style.visibility = 'hidden';
+        
+        (function() {
+            // Check both Netlify Identity and localStorage/sessionStorage
+            function checkAdminAuth() {
+                // First check: admin flags in session
+                const isAdminSession = sessionStorage.getItem('isAdmin') === 'true';
+                const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+                
+                if (!isAdminSession || !isLoggedIn) {
+                    console.log('Admin session not found');
+                    return false;
+                }
+                
+                // Second check: admin data in localStorage
+                try {
+                    const userData = localStorage.getItem('loggedInUser');
+                    if (!userData) {
+                        console.log('No user data found in localStorage');
+                        return false;
+                    }
+                    
+                    const user = JSON.parse(userData);
+                    if (!user || !user.isAdmin) {
+                        console.log('User is not admin in localStorage');
+                        return false;
+                    }
+                } catch (e) {
+                    console.error('Auth check localStorage error:', e);
+                    return false;
+                }
+                
+                // Third check (if available): Netlify Identity
+                try {
+                    if (window.netlifyIdentity) {
+                        const user = netlifyIdentity.currentUser();
+                        if (!user) {
+                            console.log('No Netlify Identity user found');
+                            return false;
+                        }
+                        
+                        // Check if user has admin role
+                        const isAdmin = (user.app_metadata && 
+                                      user.app_metadata.roles && 
+                                      user.app_metadata.roles.includes('admin')) ||
+                                      user.email === 'honzamazoch@email.cz';
+                        
+                        if (!isAdmin) {
+                            console.log('Netlify user is not admin');
+                            return false;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Netlify Identity check error:', e);
+                    // Continue with other checks if Netlify Identity fails
+                }
+                
+                // All checks passed
+                return true;
+            }
+            
+            // Run the authentication check
+            if (!checkAdminAuth()) {
+                console.log('Authentication failed - redirecting to login');
+                window.location.replace('admin-auth.html');
+                throw new Error('Authentication required');
+            }
+            
+            // Make content visible when DOMContentLoaded fires
+            document.addEventListener('DOMContentLoaded', function() {
+                document.documentElement.style.visibility = 'visible';
+                console.log('Admin authentication verified - showing dashboard');
+            });
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/account.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Jacques+Francois&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="account-header">
+        <nav>
+            <div class="logo"><a href="index.html"><img src="logos/lavaredo_logo.png" alt="Lavaredo"></a></div>
+            <ul class="nav-links">
+                <li><a href="index.html#gallery">Gallery</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#collections">Collections</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            
+            <!-- Back button -->
+            <div class="top-right-close">
+                <a href="index.html" title="Return to main page"><i class="fas fa-times"></i></a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="container">
+            <h1>Admin Dashboard</h1>
+            <div class="admin-header">
+                <div class="admin-welcome">
+                    <p>Welcome, <span id="adminName">Admin</span></p>
+                    <p class="admin-time" id="currentTime"></p>
+                </div>
+                <div class="admin-actions">
+                    <button id="refreshOrdersBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                    <button id="adminLogoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            <div class="admin-content-full">
+                <div id="orders" class="admin-section active">
+                    <div class="section-header">
+                        <h2>All Pre-orders</h2>
+                        <div class="section-actions">
+                            <input type="text" placeholder="Search orders..." class="search-input">
+                            <select class="filter-select">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="orders-table-container">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Sample order data -->
+                                <tr>
+                                    <td>#ORD-1001</td>
+                                    <td>John Doe</td>
+                                    <td>2023-08-15</td>
+                                    <td>3</td>
+                                    <td><span class="status-badge pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn-view" data-id="1001"><i class="fas fa-eye"></i></button>
+                                        <button class="btn-edit" data-id="1001"><i class="fas fa-edit"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#ORD-1002</td>
+                                    <td>Jane Smith</td>
+                                    <td>2023-08-14</td>
+                                    <td>2</td>
+                                    <td><span class="status-badge processing">Processing</span></td>
+                                    <td>
+                                        <button class="btn-view" data-id="1002"><i class="fas fa-eye"></i></button>
+                                        <button class="btn-edit" data-id="1002"><i class="fas fa-edit"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Order View Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Order Details</h2>
+            <div id="orderDetails">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/account.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

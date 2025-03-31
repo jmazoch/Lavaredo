@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .auth-container {
+            text-align: center;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .logo-img {
+            max-height: 60px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        p {
+            margin-bottom: 25px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .login-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 10px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        .login-btn:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+        }
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdeaea;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+        .error-message.active {
+            display: block;
+        }
+        .return-link {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+    <div class="auth-container" id="authContainer">
+        <img src="logos/lavaredo_logo.png" alt="Lavaredo" class="logo-img">
+        <h2>Admin Authentication</h2>
+        <p>Please log in with your Netlify Identity account to access the admin dashboard. Only authorized administrators can access this area.</p>
+
+        <div class="error-message" id="errorMessage"></div>
+        
+        <button id="loginButton" class="login-btn">
+            <i class="fas fa-sign-in-alt"></i> Login with Netlify Identity
+        </button>
+        
+        <p class="return-link">
+            <a href="index.html">Return to Main Site</a>
+        </p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorMessage = document.getElementById('errorMessage');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Function to show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('active');
+            }
+            
+            // Check if already logged in as admin
+            function checkExistingAuth() {
+                // Check Netlify Identity first
+                if (window.netlifyIdentity) {
+                    const user = netlifyIdentity.currentUser();
+                    
+                    if (user) {
+                        console.log('User already logged in:', user.email);
+                        
+                        // Check if user has admin role or is admin email
+                        const isAdmin = (user.app_metadata && 
+                                      user.app_metadata.roles && 
+                                      user.app_metadata.roles.includes('admin')) ||
+                                      user.email === 'honzamazoch@email.cz';
+                        
+                        if (isAdmin) {
+                            // Store admin user data
+                            const adminUser = {
+                                name: user.user_metadata.full_name || user.email,
+                                email: user.email,
+                                isAdmin: true,
+                                role: 'admin',
+                                auth: Date.now()
+                            };
+                            
+                            localStorage.setItem('loggedInUser', JSON.stringify(adminUser));
+                            sessionStorage.setItem('isLoggedIn', 'true');
+                            sessionStorage.setItem('isAdmin', 'true');
+                            sessionStorage.setItem('adminToken', user.token.access_token);
+                            
+                            // Redirect to admin dashboard
+                            window.location.href = 'admin-dashboard.html';
+                            return true;
+                        } else {
+                            showError('Your account does not have admin privileges.');
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            // Add Netlify Identity event listeners
+            if (window.netlifyIdentity) {
+                netlifyIdentity.on('login', user => {
+                    console.log('Login event received from Netlify Identity');
+                    
+                    try {
+                        // Check if user has admin role
+                        const isAdmin = (user.app_metadata && 
+                                      user.app_metadata.roles && 
+                                      user.app_metadata.roles.includes('admin')) ||
+                                      user.email === 'honzamazoch@email.cz';
+                        
+                        if (isAdmin) {
+                            // Store admin user data
+                            const adminUser = {
+                                name: user.user_metadata.full_name || user.email,
+                                email: user.email,
+                                isAdmin: true,
+                                role: 'admin',
+                                auth: Date.now()
+                            };
+                            
+                            localStorage.setItem('loggedInUser', JSON.stringify(adminUser));
+                            sessionStorage.setItem('isLoggedIn', 'true');
+                            sessionStorage.setItem('isAdmin', 'true');
+                            sessionStorage.setItem('adminToken', user.token.access_token);
+                            
+                            // Close the modal
+                            netlifyIdentity.close();
+                            
+                            // Redirect to admin dashboard
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            netlifyIdentity.close();
+                            showError('You do not have admin privileges.');
+                        }
+                    } catch (error) {
+                        console.error('Error processing login:', error);
+                        showError('Login processing error. Please try again.');
+                    }
+                });
+                
+                netlifyIdentity.on('error', err => {
+                    console.error('Netlify Identity error:', err);
+                    showError('Authentication error: ' + err.message);
+                });
+            } else {
+                showError('Netlify Identity service is not available. Please try again later.');
+            }
+            
+            // Check if already logged in
+            if (!checkExistingAuth()) {
+                // Add button click event to open Netlify Identity widget
+                loginButton.addEventListener('click', function() {
+                    if (window.netlifyIdentity) {
+                        netlifyIdentity.open('login');
+                    } else {
+                        showError('Netlify Identity service is not available.');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
