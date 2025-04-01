@@ -256,25 +256,7 @@ async function loadAllOrders() {
         const localOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
         console.log(`Found ${localOrders.length} orders in localStorage`);
         
-        // Create test order in localStorage if none exist
-        if (localOrders.length === 0) {
-            const testOrder = {
-                id: "LOCAL-" + Date.now().toString().substring(8),
-                customer: "LOCAL TEST ORDER",
-                email: "local@test.com",
-                phone: "+420 TEST LOCAL",
-                date: new Date().toISOString(),
-                timestamp: Date.now(),
-                items: [
-                    { name: "Local Test Jersey", gender: "Test", size: "TEST" }
-                ],
-                status: "local-test",
-                source: "local-test"
-            };
-            localOrders.push(testOrder);
-            localStorage.setItem('submittedOrders', JSON.stringify(localOrders));
-            console.log('Created test order in localStorage');
-        }
+        // Remove test order creation - let system show empty state when no orders exist
         
         // Combine server and local orders using a Map to deduplicate
         const orderMap = new Map();
@@ -345,10 +327,20 @@ async function loadAllOrders() {
             // Highlight the source for debugging
             const sourceClass = order.source === 'server' || order.source === 'server-test' ? 'server-source' : 'local-source';
             
+            // Format date with time
+            const dateTimeFormatted = order.date ? 
+                new Date(order.date).toLocaleString('en-US', {
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'N/A';
+            
             row.innerHTML = `
                 <td class="${sourceClass}">#ORD-${shortId}</td>
                 <td>${order.customer || 'Unknown'}</td>
-                <td>${order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}</td>
+                <td>${dateTimeFormatted}</td>
                 <td>${order.items ? order.items.length : 0}</td>
                 <td><span class="status-badge ${statusClass}">${order.status || 'preordered'}</span></td>
                 <td>
@@ -625,12 +617,15 @@ function viewOrder(orderId) {
         return;
     }
     
-    // Format the order date
+    // Format the order date with time
     const orderDate = new Date(order.date);
-    const formattedDate = orderDate.toLocaleDateString('en-US', {
+    const formattedDate = orderDate.toLocaleString('en-US', {
         year: 'numeric', 
         month: 'long', 
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
     });
     
     // Build the HTML for order details

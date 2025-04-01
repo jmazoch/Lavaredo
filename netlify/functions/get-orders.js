@@ -28,36 +28,12 @@ exports.handler = async function(event, context) {
     }
     
     // In a real app, fetch orders from database
-    // For demo, create a few sample orders
-    const sampleOrders = [
-      {
-        id: "1001",
-        customer: "John Doe",
-        email: "john@example.com",
-        phone: "+420 123 456 789",
-        date: "2023-05-15",
-        items: [
-          {name: "Team Jersey", size: "L", gender: "Men"}
-        ],
-        status: "preordered"
-      },
-      {
-        id: "1002",
-        customer: "Jane Smith",
-        email: "jane@example.com",
-        phone: "+420 987 654 321",
-        date: "2023-05-16",
-        items: [
-          {name: "Classic Jersey", size: "M", gender: "Women"},
-          {name: "Race Bibs", size: "M", gender: "Women"}
-        ],
-        status: "added"
-      }
-    ];
+    // Return empty orders array (removed sample orders)
+    const orders = [];
     
     return {
       statusCode: 200,
-      body: JSON.stringify({ orders: sampleOrders })
+      body: JSON.stringify({ orders: orders })
     };
   } catch (error) {
     console.log("Error retrieving orders:", error);
