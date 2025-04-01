@@ -441,18 +441,26 @@ function setupOrderButtons() {
     });
 }
 
+// Add better handling for viewing server orders
 function viewOrder(orderId) {
     console.log('Viewing order:', orderId);
     
-    // Get all orders
+    // Check both local and server orders
     const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+    let order = submittedOrders.find(order => order.id == orderId);
     
-    // Find the specific order
-    const order = submittedOrders.find(order => order.id == orderId);
-    
+    // If order is not in localStorage, it might be a server-only order
     if (!order) {
-        alert('Order not found');
-        return;
+        // Try to fetch from server if not found locally
+        const isServerOrder = orderId.toString().includes('SERVER-');
+        
+        if (isServerOrder) {
+            alert('This order exists only on the server and full details may not be available.');
+            // You could implement a server fetch for individual orders here
+        } else {
+            alert('Order not found');
+            return;
+        }
     }
     
     // Get the modal elements
@@ -658,6 +666,39 @@ function editOrder(orderId) {
     // Implementation will be added later
     console.log('Editing order:', orderId);
     alert('Order editing will be available in a future update');
+}
+
+// Add export functionality
+function exportOrders() {
+    const allOrders = Array.from(document.querySelectorAll('#ordersTableBody tr'))
+        .map(row => {
+            const columns = row.querySelectorAll('td');
+            if (columns.length < 5) return null;
+            
+            return {
+                id: columns[0].textContent.replace('#ORD-', ''),
+                customer: columns[1].textContent,
+                date: columns[2].textContent,
+                items: columns[3].textContent,
+                status: columns[4].querySelector('.status-badge').textContent
+            };
+        })
+        .filter(order => order !== null);
+    
+    // Create CSV
+    const csvContent = 'data:text/csv;charset=utf-8,' 
+        + 'Order ID,Customer,Date,Items,Status\n'
+        + allOrders.map(order => 
+            `${order.id},${order.customer},${order.date},${order.items},${order.status}`
+        ).join('\n');
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'lavaredo-orders.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Make initialization function available globally

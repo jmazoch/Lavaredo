@@ -278,6 +278,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Vyčistíme košík
                     localStorage.setItem('shopping_cart', JSON.stringify([]));
                     
+                    // Add analytics tracking if needed
+                    if (window.gtag) {
+                        window.gtag('event', 'order_submitted', {
+                            'event_category': 'ecommerce',
+                            'event_label': orderData.id
+                        });
+                    }
+                    
                     return orderData.id;
                 } else {
                     // Pokud server selhal, ale máme data, uložíme je lokálně
@@ -292,6 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Vyčistíme košík
                     localStorage.setItem('shopping_cart', JSON.stringify([]));
                     
+                    // Add more visible feedback to user about the fallback
+                    alert('We saved your pre-order locally. Our team will get in touch soon.');
+                    
                     return orderData.id;
                 }
             } catch (serverError) {
@@ -304,6 +315,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Vyčistíme košík
                 localStorage.setItem('shopping_cart', JSON.stringify([]));
+                
+                // Add more visible feedback to user about the fallback
+                alert('We saved your pre-order locally. Our team will get in touch soon.');
                 
                 return orderData.id;
             }
