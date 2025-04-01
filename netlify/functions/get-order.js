@@ -40,37 +40,13 @@ exports.handler = async function(event, context) {
       };
     }
     
-    console.log(`Fetching order details for ID: ${orderId}`);
+    console.log(`Attempting to fetch real order for ID: ${orderId}`);
     
-    // In a real implementation, you would fetch this from your database
-    // For now, return a sample order with the requested ID
-    const order = {
-      id: orderId,
-      customer: "Server Order Customer",
-      email: "server-order@example.com",
-      phone: "+1 555-SERVER",
-      date: new Date().toISOString(),
-      timestamp: Date.now(),
-      status: "preordered",
-      source: "server",
-      items: [
-        { 
-          name: "Jersey from Server DB", 
-          gender: "Unisex", 
-          size: "L" 
-        },
-        { 
-          name: "Bibs from Server DB", 
-          gender: "Unisex", 
-          size: "M" 
-        }
-      ]
-    };
-    
+    // Return 404 instead of mock data
     return {
-      statusCode: 200,
+      statusCode: 404,
       headers,
-      body: JSON.stringify({ order })
+      body: JSON.stringify({ error: "Order not found", message: "No order exists with this ID" })
     };
   } catch (error) {
     console.error("Error fetching order:", error);
