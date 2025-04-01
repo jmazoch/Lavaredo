@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = 'index.html';
         });
     }
+
+    // Remove test order button
 });
 
 // Updates the current time display in the admin header
@@ -327,20 +329,31 @@ async function loadAllOrders() {
             // Highlight the source for debugging
             const sourceClass = order.source === 'server' || order.source === 'server-test' ? 'server-source' : 'local-source';
             
-            // Format date with time
-            const dateTimeFormatted = order.date ? 
-                new Date(order.date).toLocaleString('en-US', {
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'N/A';
+            // Enhanced date-time formatting with better debug logging
+            let dateTimeFormatted = 'N/A';
+            try {
+                if (order.date) {
+                    const orderDate = new Date(order.date);
+                    console.log(`Order ${shortId} date value:`, order.date);
+                    console.log(`Parsed date object:`, orderDate);
+                    
+                    dateTimeFormatted = orderDate.toLocaleString('en-US', {
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    console.log(`Formatted date-time:`, dateTimeFormatted);
+                }
+            } catch (dateError) {
+                console.error(`Error formatting date for order ${shortId}:`, dateError);
+            }
             
             row.innerHTML = `
                 <td class="${sourceClass}">#ORD-${shortId}</td>
                 <td>${order.customer || 'Unknown'}</td>
-                <td>${dateTimeFormatted}</td>
+                <td class="order-datetime">${dateTimeFormatted}</td>
                 <td>${order.items ? order.items.length : 0}</td>
                 <td><span class="status-badge ${statusClass}">${order.status || 'preordered'}</span></td>
                 <td>
@@ -368,7 +381,7 @@ async function loadAllOrders() {
                 content: "Server"; 
                 position: absolute; 
                 top: 0; 
-                right: 0;
+                right: 0; 
                 font-size: 8px; 
                 background: #4a90e2; 
                 color: white; 
@@ -380,7 +393,7 @@ async function loadAllOrders() {
                 content: "Local"; 
                 position: absolute; 
                 top: 0; 
-                right: 0;
+                right: 0; 
                 font-size: 8px; 
                 background: #888; 
                 color: white; 
@@ -439,7 +452,6 @@ function setupOrderButtons() {
             const orderId = this.getAttribute('data-id');
             const orderRow = this.closest('tr');
             const customerName = orderRow.querySelector('td:nth-child(2)').textContent;
-            
             showDeleteConfirmation(orderId, customerName);
         });
     });
@@ -455,7 +467,6 @@ function showDeleteConfirmation(orderId, customerName) {
         modal = document.createElement('div');
         modal.id = 'deleteConfirmModal';
         modal.className = 'delete-confirm-modal';
-        
         modal.innerHTML = `
             <div class="confirm-dialog">
                 <h3>Delete Order</h3>
@@ -548,7 +559,6 @@ async function deleteOrder(orderId) {
                 console.log('Order deleted from server');
             } else {
                 console.warn('Server deletion failed:', response.status);
-                
                 // Try alternative API endpoint if first one fails
                 const altResponse = await fetch('/api/delete-order', {
                     method: 'POST',
@@ -579,7 +589,6 @@ async function deleteOrder(orderId) {
             // Error - nothing was deleted
             showToast('Failed to delete order. Order not found.', 'error');
         }
-        
     } catch (error) {
         console.error('Error deleting order:', error);
         showToast(`Error: ${error.message}`, 'error');
@@ -643,7 +652,6 @@ function viewOrder(orderId) {
                 <p><strong>Phone:</strong> ${order.phone || 'Not provided'}</p>
             </div>
         </div>
-        
         <div class="order-items">
             <h3>Ordered Items</h3>
             <table class="order-items-table">
@@ -700,7 +708,6 @@ function viewOrder(orderId) {
                 </tbody>
             </table>
         </div>
-        
         <div class="order-actions">
             <div class="order-status-options">
                 <h4>Update Order Status:</h4>
@@ -861,7 +868,6 @@ function exportOrders() {
         .map(row => {
             const columns = row.querySelectorAll('td');
             if (columns.length < 5) return null;
-            
             return {
                 id: columns[0].textContent.replace('#ORD-', ''),
                 customer: columns[1].textContent,

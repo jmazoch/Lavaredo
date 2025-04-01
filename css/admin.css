@@ -188,6 +188,12 @@
     min-width: 180px;
 }
 
+.orders-table td.order-datetime {
+    white-space: nowrap;
+    min-width: 200px;
+    font-size: 0.95rem;
+}
+
 /* Status badges */
 .status-badge {
     display: inline-block;
