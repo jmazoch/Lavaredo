@@ -182,76 +182,21 @@ async function loadAllOrders() {
             </tr>
         `;
         
-        // Attempt to fetch orders from Netlify function
+        // Attempt to fetch orders from Netlify function using our new API utils
         let serverOrders = [];
         const serverFetchFailed = { failed: false, reason: '' };
         
         try {
-            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
+            console.log('Fetching server orders using API utils');
             
-            // Debug information
-            console.log('Current URL:', window.location.href);
-            console.log('Hostname:', window.location.hostname);
-            console.log('Is local:', window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1'));
+            // Použití nové API utility pro volání serverless funkce
+            const result = await window.apiUtils.callFunction('admin-orders');
             
-            // Try different function paths based on environment
-            const functionUrls = [
-                '/.netlify/functions/admin-orders',
-                '/api/admin-orders'
-            ];
-            
-            let response = null;
-            let fetchError = null;
-            
-            console.log('Attempting to fetch server orders...');
-            
-            // Try each URL until one works
-            for (const url of functionUrls) {
-                try {
-                    console.log(`Trying URL: ${url}`);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                    
-                    response = await fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${adminToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    console.log(`Response from ${url}:`, response.status);
-                    
-                    if (response.ok) {
-                        console.log('Successful response received!');
-                        break; // Exit loop on successful response
-                    } else {
-                        fetchError = `Status: ${response.status}`;
-                        console.warn(`Failed with ${fetchError}`);
-                    }
-                } catch (err) {
-                    console.warn(`Fetch error for ${url}:`, err);
-                    fetchError = err.message;
-                }
+            if (result && result.orders) {
+                serverOrders = result.orders;
+                console.log(`✅ Successfully fetched ${serverOrders.length} orders from server`);
             }
             
-            // If we have a good response, process it
-            if (response && response.ok) {
-                const result = await response.json();
-                console.log('API response:', result);
-                
-                if (result.orders) {
-                    serverOrders = result.orders;
-                    console.log(`✅ Successfully fetched ${serverOrders.length} orders from server`);
-                }
-            } else {
-                serverFetchFailed.failed = true;
-                serverFetchFailed.reason = fetchError || 'Unknown error';
-                throw new Error(serverFetchFailed.reason);
-            }
         } catch (apiError) {
             console.error('API fetch error:', apiError);
             serverFetchFailed.failed = true;
@@ -559,38 +504,21 @@ async function deleteOrder(orderId, showToasts = true) {
             console.log('Order deleted from localStorage');
         }
         
-        // Try to delete from server
+        // Try to delete from server using API utils
         let serverDeleted = false;
         try {
-            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
-            const response = await fetch('/.netlify/functions/delete-order', {
+            console.log('Calling delete-order function via API utils');
+            
+            const result = await window.apiUtils.callFunction('delete-order', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({ orderId })
             });
             
-            if (response.ok) {
+            if (result && result.success) {
                 serverDeleted = true;
                 console.log('Order deleted from server');
             } else {
-                console.warn('Server deletion failed:', response.status);
-                // Try alternative API endpoint if first one fails
-                const altResponse = await fetch('/api/delete-order', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${adminToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ orderId })
-                });
-                
-                if (altResponse.ok) {
-                    serverDeleted = true;
-                    console.log('Order deleted from server via alternative endpoint');
-                }
+                console.warn('Server deletion response did not indicate success:', result);
             }
         } catch (apiError) {
             console.error('API error during order deletion:', apiError);
@@ -650,67 +578,13 @@ async function viewOrder(orderId) {
             </div>
         `;
         
-        // For debugging, show all available paths
-        const basePath = window.location.origin;
-        console.log('Base URL path:', basePath);
-        
-        // Try multiple possible API endpoints to handle different Netlify configurations
-        const possibleEndpoints = [
-            `/.netlify/functions/get-order?orderId=${orderId}`,
-            `/api/get-order?orderId=${orderId}`,
-            `/functions/get-order?orderId=${orderId}`,
-            `/netlify/functions/get-order?orderId=${orderId}`
-        ];
-        console.log('Will try these endpoints:', possibleEndpoints);
-        
-        // Add debug information to modal
-        const endpointInfoEl = orderDetails.querySelector('.endpoint-info');
-        if (endpointInfoEl) {
-            endpointInfoEl.textContent += ` - Trying ${possibleEndpoints.length} endpoints...`;
-        }
-        
-        let fetchError = null;
-        
-        // Try to fetch from server - try each endpoint until one works
+        // Try to fetch from server using API utils
         try {
-            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
-            let response = null;
+            console.log('Fetching order via API utils');
             
-            for (const endpoint of possibleEndpoints) {
-                try {
-                    console.log(`Trying to fetch from: ${endpoint}`);
-                    if (endpointInfoEl) {
-                        endpointInfoEl.textContent = `Trying: ${endpoint.split('?')[0]}`;
-                    }
-                    
-                    response = await fetch(endpoint, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${adminToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    console.log(`Response status from ${endpoint}:`, response.status);
-                    
-                    if (response.ok) {
-                        console.log(`✅ Successfully fetched from ${endpoint}`);
-                        break;
-                    } else {
-                        console.warn(`❌ ${endpoint} returned ${response.status}`);
-                    }
-                } catch (endpointError) {
-                    console.warn(`❌ Error with ${endpoint}:`, endpointError);
-                }
-            }
+            const result = await window.apiUtils.callFunction('get-order', {}, { orderId });
             
-            if (!response || !response.ok) {
-                throw new Error(`Server returned ${response ? response.status : 'no response'}`);
-            }
-            
-            const result = await response.json();
-            
-            if (result.order) {
+            if (result && result.order) {
                 order = result.order;
                 console.log('Successfully fetched order from server:', order);
             } else {
@@ -724,13 +598,15 @@ async function viewOrder(orderId) {
                     <div class="diagnostic-info">
                         <p>Server Endpoints Tried:</p>
                         <ul>
-                            ${possibleEndpoints.map(url => `<li>${url}</li>`).join('')}
+                            ${window.apiUtils.getFunctionUrl('get-order', { orderId })
+                                .map(url => `<li>${url}</li>`).join('')}
                         </ul>
                         <p>To fix this issue:</p>
                         <ul>
                             <li>Make sure your serverless functions are deployed</li>
                             <li>Check Netlify function logs for errors</li>
                             <li>Verify the get-order.js function exists in both directories</li>
+                            <li>Check CORS configuration in your Netlify functions</li>
                         </ul>
                     </div>
                     <button class="close-btn" onclick="document.getElementById('orderModal').style.display='none'">Close</button>
@@ -924,22 +800,19 @@ async function updateOrderStatus(orderId, status) {
             console.log('Order status updated in localStorage');
         }
         
-        // Try to update on server as well
+        // Try to update on server using API utils
         try {
-            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
-            const response = await fetch('/.netlify/functions/update-order', {
+            console.log('Updating order status via API utils');
+            
+            const result = await window.apiUtils.callFunction('update-order', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({
                     orderId: orderId,
                     status: status
                 })
             });
             
-            if (response.ok) {
+            if (result && result.success) {
                 console.log('Order status updated on server');
             } else {
                 console.warn('Server update failed, but local update succeeded');

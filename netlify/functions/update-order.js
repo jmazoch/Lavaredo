@@ -1,74 +1,47 @@
-// Netlify serverless function to handle order status updates
+const corsHelpers = require('./utils/cors-headers');
+
 exports.handler = async function(event, context) {
-  // Set up CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-  };
-  
-  // Handle OPTIONS requests (pre-flight)
+  // Zpracování OPTIONS requestů
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+    return corsHelpers.handleOptions();
   }
   
-  // Only allow POST requests
+  // Pouze povolit POST requesty
   if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      headers,
-      body: JSON.stringify({ error: "Method Not Allowed" })
-    };
+    return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Check authorization (should be more robust in production)
+  // Kontrola autorizace
   const authHeader = event.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: "Unauthorized" })
-    };
+    return corsHelpers.createResponse(401, { error: "Unauthorized" });
   }
   
   try {
-    // Parse request body
+    // Parsování těla requestu
     const data = JSON.parse(event.body);
     
-    // Validate required fields
+    // Validace povinných polí
     if (!data.orderId || !data.status) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing required fields" })
-      };
+      return corsHelpers.createResponse(400, { error: "Missing required fields" });
     }
     
     console.log(`Order status update: ID ${data.orderId} to ${data.status}`);
     
-    // In a production system, we would update the order in a database
-    // For now, just return a success response
+    // V produkčním systému bychom aktualizovali objednávku v databázi
+    // Zatím jen vrátíme úspěšnou odpověď
     
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        success: true,
-        message: "Order status updated",
-        orderId: data.orderId,
-        status: data.status
-      })
-    };
+    return corsHelpers.createResponse(200, { 
+      success: true,
+      message: "Order status updated",
+      orderId: data.orderId,
+      status: data.status
+    });
   } catch (error) {
     console.log("Error updating order:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: "Failed to update order", details: error.message })
-    };
+    return corsHelpers.createResponse(500, { 
+      error: "Failed to update order", 
+      details: error.message 
+    });
   }
 };

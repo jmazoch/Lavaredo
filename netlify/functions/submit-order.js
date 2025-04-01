@@ -1,52 +1,34 @@
-// Netlify serverless function to handle order submission
+const corsHelpers = require('./utils/cors-headers');
+
 exports.handler = async function(event, context) {
-  // Set up CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-  };
-  
-  // Handle OPTIONS requests (pre-flight)
+  // Zpracování OPTIONS requestů
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+    return corsHelpers.handleOptions();
   }
   
-  // Only allow POST requests
+  // Pouze povolit POST requesty
   if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      headers,
-      body: JSON.stringify({ error: "Method Not Allowed" })
-    };
+    return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
   console.log('Submit order function called');
   
   try {
-    // Parse the incoming request body
+    // Parsování těla příchozího requestu
     const data = JSON.parse(event.body);
     console.log('Received data:', JSON.stringify(data).substring(0, 200) + '...');
     
-    // Validate required fields
+    // Validace povinných polí
     if (!data.customer || !data.email || !data.items) {
       console.log('Missing required fields');
-      return { 
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing required fields" })
-      };
+      return corsHelpers.createResponse(400, { error: "Missing required fields" });
     }
     
-    // Generate a unique order ID if not provided
+    // Vygenerování unikátního ID objednávky, pokud není poskytnuto
     const orderId = data.id || Math.floor(1000 + Math.random() * 9000);
     const timestamp = new Date().toISOString();
     
-    // Create the order object with complete data
+    // Vytvoření objektu objednávky s kompletními daty
     const orderData = {
       id: orderId,
       customer: data.customer,
@@ -58,27 +40,22 @@ exports.handler = async function(event, context) {
       status: 'preordered'
     };
     
-    // Log the order details (will appear in Netlify function logs)
+    // Logování detailů objednávky (objeví se v Netlify function logs)
     console.log(`New order submitted: #ORD-${orderId} by ${orderData.customer}`);
     
-    // Here you would typically save the order to a database
-    // For now, just return success
+    // V reálné aplikaci byste zde uložili objednávku do databáze
+    // Zatím jen vrátíme úspěšnou odpověď
     
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        success: true,
-        message: "Order submitted successfully",
-        orderId: orderId
-      })
-    };
+    return corsHelpers.createResponse(200, { 
+      success: true,
+      message: "Order submitted successfully",
+      orderId: orderId
+    });
   } catch (error) {
     console.log("Error processing order:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: "Failed to process order", details: error.message })
-    };
+    return corsHelpers.createResponse(500, { 
+      error: "Failed to process order", 
+      details: error.message 
+    });
   }
 };

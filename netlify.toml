@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  functions = "netlify/functions"  # Choose one primary location
+  functions = "netlify/functions"
   
 [dev]
   functions = "netlify/functions"
@@ -11,8 +11,16 @@
   status = 200
   force = true
 
+# Explicitní povolení CORS pro funkce
+[[headers]]
+  for = "/.netlify/functions/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
 [functions]
-  directory = "netlify/functions"  # Make this the single source
+  directory = "netlify/functions"
   node_bundler = "esbuild"
 
 [template.environment]

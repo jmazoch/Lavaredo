@@ -228,90 +228,78 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             console.log('Odesílám objednávku do Netlify funkcí...');
-            console.log('Data objednávky:', JSON.stringify(orderData).substring(0, 100) + '...');
             
-            try {
-                // Zkusíme zavolat funkci na různých URL (pro případ odlišného nasazení)
-                const urls = [
-                    '/.netlify/functions/submit-order',
-                    '/api/submit-order'
-                ];
-                
-                let response = null;
-                let error = null;
-                
-                // Zkusíme každou URL dokud některá nefunguje
-                for (const url of urls) {
-                    try {
-                        console.log(`Zkouším odeslat na: ${url}`);
-                        const loadingIndicator = document.createElement('div');
-                        loadingIndicator.className = 'loading-overlay';
-                        loadingIndicator.innerHTML = '<div class="spinner"></div><p>Processing order...</p>';
-                        document.body.appendChild(loadingIndicator);
-                        
-                        response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(orderData)
-                        });
-                        
-                        document.body.removeChild(loadingIndicator);
-                        
-                        if (response.ok) {
-                            console.log(`Úspěch! URL ${url} funguje.`);
-                            break;
-                        } else {
-                            console.warn(`URL ${url} vrátila status: ${response.status}`);
-                            error = `Status: ${response.status}`;
-                        }
-                    } catch (fetchError) {
-                        console.warn(`Chyba při volání ${url}:`, fetchError);
-                        error = fetchError.message;
-                        
-                        // Remove loading indicator if it exists
-                        const loadingIndicator = document.querySelector('.loading-overlay');
-                        if (loadingIndicator) document.body.removeChild(loadingIndicator);
+            // Zobrazit načítací indikátor
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading-overlay';
+            loadingIndicator.innerHTML = '<div class="spinner"></div><p>Processing order...</p>';
+            document.body.appendChild(loadingIndicator);
+            
+            // Použít relativní URL s možností fallbacku na alternativní cesty
+            const urls = [
+                '/.netlify/functions/submit-order',
+                '/api/submit-order',  // Alternativa pokud je nakonfigurovaný redirect
+                `${window.location.origin}/.netlify/functions/submit-order` // Explicitní URL s origin
+            ];
+            
+            let response = null;
+            let error = null;
+            
+            // Zkusit postupně každou URL, dokud jedna nefunguje
+            for (const url of urls) {
+                try {
+                    console.log(`Zkouším odeslat na: ${url}`);
+                    
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // Odstranit Origin header (prohlížeč ho přidá automaticky)
+                        },
+                        body: JSON.stringify(orderData),
+                        // Důležité pro cross-origin požadavky
+                        mode: 'cors',
+                        credentials: 'omit' // Netlify functions nepotřebují cookies
+                    });
+                    
+                    console.log(`Odpověď z ${url}: Status ${response.status}`);
+                    
+                    if (response.ok) {
+                        console.log(`Úspěch! URL ${url} funguje.`);
+                        break; // Ukončit smyčku, pokud požadavek uspěje
+                    } else {
+                        console.warn(`URL ${url} vrátila status: ${response.status}`);
+                        error = `Status: ${response.status}`;
                     }
+                } catch (fetchError) {
+                    console.warn(`Chyba při volání ${url}:`, fetchError);
+                    error = fetchError.message;
                 }
+            }
+            
+            // Odstranit načítací indikátor
+            document.body.removeChild(loadingIndicator);
+            
+            // Zpracovat odpověď nebo chybu
+            if (response && response.ok) {
+                const result = await response.json();
+                console.log('Objednávka odeslána úspěšně:', result);
                 
-                // Pokud máme úspěšnou odpověď
-                if (response && response.ok) {
-                    const result = await response.json();
-                    console.log('Objednávka odeslána úspěšně:', result);
-                    
-                    // Always store in localStorage as backup
-                    const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-                    existingOrders.push(orderData);
-                    localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
-                    
-                    // Vyčistíme košík
-                    localStorage.setItem('shopping_cart', JSON.stringify([]));
-                    
-                    return orderData.id;
-                } else {
-                    // Pokud server selhal, ale máme data, uložíme je lokálně
-                    console.error('Serverová část selhala:', error || 'Neznámá chyba');
-                    console.log('Ukládám do localStorage jako zálohu');
-                    
-                    // Uložíme do localStorage
-                    const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-                    existingOrders.push(orderData);
-                    localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
-                    
-                    // Vyčistíme košík
-                    localStorage.setItem('shopping_cart', JSON.stringify([]));
-                    
-                    // Notify user about local storage
-                    alert('We\'ve saved your order locally. Our team will contact you soon!');
-                    
-                    return orderData.id;
-                }
-            } catch (serverError) {
-                console.error('Chyba při odesílání na server:', serverError);
+                // Always store in localStorage as backup
+                const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+                existingOrders.push(orderData);
+                localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
                 
-                // Záloha do localStorage
+                // Vyčistit košík
+                localStorage.setItem('shopping_cart', JSON.stringify([]));
+                
+                return orderData.id;
+            } else {
+                // Pokud server selhal, ale máme data, uložíme je lokálně
+                console.error('Serverová část selhala:', error || 'Neznámá chyba');
+                console.log('Ukládám do localStorage jako zálohu');
+                
+                // Uložíme do localStorage
                 const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
                 existingOrders.push(orderData);
                 localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
@@ -319,8 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Vyčistíme košík
                 localStorage.setItem('shopping_cart', JSON.stringify([]));
                 
-                // Add more visible feedback to user about the fallback
-                alert('We saved your pre-order locally. Our team will get in touch soon.');
+                alert('Objednávka byla uložena lokálně. Náš tým vás bude brzy kontaktovat!');
                 
                 return orderData.id;
             }

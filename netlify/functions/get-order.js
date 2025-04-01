@@ -1,48 +1,33 @@
-// Serverless function to get a single order by ID
+const corsHelpers = require('./utils/cors-headers');
+
 exports.handler = async function(event, context) {
-  // Set up CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-  
-  // Handle OPTIONS requests
+  // Zpracování OPTIONS requestů
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+    return corsHelpers.handleOptions();
   }
   
-  // Only allow GET requests
+  // Pouze povolit GET requesty
   if (event.httpMethod !== "GET") {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: "Method Not Allowed" }) };
+    return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Check authorization
+  // Kontrola autorizace
   const token = event.headers.authorization;
   if (!token || !token.startsWith('Bearer ')) {
-    return { 
-      statusCode: 401, 
-      headers, 
-      body: JSON.stringify({ error: "Unauthorized" }) 
-    };
+    return corsHelpers.createResponse(401, { error: "Unauthorized" });
   }
   
   try {
-    // Get order ID from query parameters
+    // Získání ID objednávky z parametrů dotazu
     const orderId = event.queryStringParameters?.orderId;
     
     if (!orderId) {
-      return { 
-        statusCode: 400, 
-        headers, 
-        body: JSON.stringify({ error: "Missing order ID" }) 
-      };
+      return corsHelpers.createResponse(400, { error: "Missing order ID" });
     }
     
     console.log(`Fetching order details for ID: ${orderId}`);
     
-    // Handle known server order patterns (starting with SERVER-)
+    // Zpracování známých vzorů serverových objednávek (začínajících SERVER-)
     if (orderId.startsWith('SERVER-')) {
       // Parse any numeric information from the ID to create deterministic but varied data
       const idNumber = parseInt(orderId.replace('SERVER-', '')) || Date.now();
@@ -81,25 +66,19 @@ exports.handler = async function(event, context) {
         });
       }
       
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ order })
-      };
+      return corsHelpers.createResponse(200, { order });
     }
     
-    // For non-SERVER orders, return a 404
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ error: "Order not found", message: "Order ID not recognized" })
-    };
+    // Pro objednávky, které nejsou SERVER-, vrátí 404
+    return corsHelpers.createResponse(404, { 
+      error: "Order not found", 
+      message: "Order ID not recognized" 
+    });
   } catch (error) {
     console.error("Error fetching order:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: "Failed to fetch order", details: error.message })
-    };
+    return corsHelpers.createResponse(500, { 
+      error: "Failed to fetch order", 
+      details: error.message 
+    });
   }
 };
