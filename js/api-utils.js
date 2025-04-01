@@ -13,36 +13,18 @@ const apiConfig = {
     // Logování pro debugging
     console.log('Current hostname:', host);
     
-    // Lokální vývoj
-    if (host === 'localhost' || host === '127.0.0.1') {
-      console.log('Using local development API path');
-      return '';  // Relativní URL pro localhost
-    }
+    // Always return empty base URL which creates a relative path
+    // This makes it work regardless of domain
+    return '';
     
-    // Production URL - pro jistotu vracíme plnou URL
-    if (host.includes('https://superb-torrone-4a9209.netlify.app')) {
-      console.log('Using production domain API path');
-      return `https://${host}`;
-    }
-    
-    // Netlify preview/staging
-    if (host.includes('netlify.app')) {
-      console.log('Using Netlify preview API path');
-      return `https://${host}`;
-    }
-    
-    // Fallback pro ostatní domény
-    console.log('Using fallback API path');
-    return '';  // Výchozí relativní cesta
+    // Previous complex logic removed because it was causing problems
   },
   
   // Způsoby, jak se dostat k funkcím - seřazené podle preference
   getFunctionPaths: function() {
     return [
       '/.netlify/functions',  // Standardní Netlify cesta
-      '/api',                 // Kdyby existovalo přesměrování
-      '/functions',           // Alternativní cesta
-      '/netlify/functions'    // Další možnost
+      '/api'                  // Přesměrování na Netlify functions
     ];
   },
   
@@ -92,6 +74,8 @@ const apiConfig = {
     
     // Debug info
     console.log(`Calling function ${functionName} with options:`, fetchOptions);
+    console.log(`Current URL: ${window.location.href}`);
+    console.log(`Origin: ${window.location.origin}`);
     
     // Získání možných URL pro funkci
     const urls = this.getFunctionUrl(functionName, queryParams);
@@ -109,20 +93,29 @@ const apiConfig = {
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         const fetchOpts = { ...fetchOptions, signal: controller.signal };
         
-        const response = await fetch(url, fetchOpts);
+        const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+        console.log(`Full URL being called: ${fullUrl}`);
+        
+        const response = await fetch(fullUrl, fetchOpts);
         clearTimeout(timeoutId);
         
-        console.log(`Response from ${url}:`, response.status);
+        console.log(`Response from ${fullUrl}:`, response.status);
         
         // Pokud je response OK, vrátíme data
         if (response.ok) {
           const data = await response.json();
-          console.log(`Success from ${url}:`, data);
+          console.log(`Success from ${fullUrl}:`, data);
           return data;
         }
         
         // Pokud status není OK, zalogujeme chybu a zkusíme další URL
-        console.warn(`Failed with status ${response.status} from ${url}`);
+        console.warn(`Failed with status ${response.status} from ${fullUrl}`);
+        try {
+          const errorText = await response.text();
+          console.warn(`Error response: ${errorText}`);
+        } catch (e) {
+          console.warn('Could not read error response');
+        }
         lastError = new Error(`API returned status ${response.status}`);
       } catch (error) {
         console.error(`Error fetching from ${url}:`, error);

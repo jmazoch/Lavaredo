@@ -11,13 +11,22 @@
   status = 200
   force = true
 
-# Explicitní povolení CORS pro funkce
+# Improved CORS setup for all paths
+[[headers]]
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+
+# Specific headers for functions
 [[headers]]
   for = "/.netlify/functions/*"
     [headers.values]
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Content-Type = "application/json"
 
 [functions]
   directory = "netlify/functions"
