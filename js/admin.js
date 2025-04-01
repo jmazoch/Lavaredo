@@ -441,15 +441,157 @@ function setupOrderButtons() {
         });
     });
     
-    // Delete buttons
+    // Delete buttons - Enhanced with better confirmation dialog
     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', function() {
             const orderId = this.getAttribute('data-id');
-            if (confirm(`Are you sure you want to delete order #${orderId}? This cannot be undone.`)) {
-                deleteOrder(orderId);
-            }
+            const orderRow = this.closest('tr');
+            const customerName = orderRow.querySelector('td:nth-child(2)').textContent;
+            
+            showDeleteConfirmation(orderId, customerName);
         });
     });
+}
+
+// New function to show a better delete confirmation
+function showDeleteConfirmation(orderId, customerName) {
+    // Check if modal already exists
+    let modal = document.getElementById('deleteConfirmModal');
+    
+    if (!modal) {
+        // Create modal if it doesn't exist
+        modal = document.createElement('div');
+        modal.id = 'deleteConfirmModal';
+        modal.className = 'delete-confirm-modal';
+        
+        modal.innerHTML = `
+            <div class="confirm-dialog">
+                <h3>Delete Order</h3>
+                <p>Are you sure you want to delete order <strong>#${orderId}</strong>?</p>
+                <p class="customer-info">Customer: <strong>${customerName}</strong></p>
+                <p class="warning">This action cannot be undone!</p>
+                <div class="confirm-actions">
+                    <button class="cancel-btn">Cancel</button>
+                    <button class="confirm-btn">Delete Order</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners to the buttons
+        modal.querySelector('.cancel-btn').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        });
+        
+        modal.querySelector('.confirm-btn').addEventListener('click', () => {
+            deleteOrder(orderId);
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        });
+        
+        // Close when clicking outside the dialog
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+            }
+        });
+    } else {
+        // Update existing modal with new order details
+        modal.querySelector('p').innerHTML = `Are you sure you want to delete order <strong>#${orderId}</strong>?`;
+        modal.querySelector('.customer-info').innerHTML = `Customer: <strong>${customerName}</strong>`;
+        
+        // Update the confirm button's event listener
+        const confirmBtn = modal.querySelector('.confirm-btn');
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        newConfirmBtn.addEventListener('click', () => {
+            deleteOrder(orderId);
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        });
+    }
+    
+    // Show the modal
+    modal.style.display = 'flex';
+    setTimeout(() => { modal.classList.add('show'); }, 10);
+}
+
+// Enhanced delete order function with better feedback
+async function deleteOrder(orderId) {
+    console.log('Deleting order:', orderId);
+    
+    // Show loading state
+    showToast('Deleting order...', 'info');
+    
+    try {
+        // Delete from localStorage first
+        let localDeleted = false;
+        const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+        const updatedOrders = submittedOrders.filter(order => order.id != orderId);
+        
+        if (updatedOrders.length !== submittedOrders.length) {
+            localStorage.setItem('submittedOrders', JSON.stringify(updatedOrders));
+            localDeleted = true;
+            console.log('Order deleted from localStorage');
+        }
+        
+        // Try to delete from server
+        let serverDeleted = false;
+        try {
+            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
+            const response = await fetch('/.netlify/functions/delete-order', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            });
+            
+            if (response.ok) {
+                serverDeleted = true;
+                console.log('Order deleted from server');
+            } else {
+                console.warn('Server deletion failed:', response.status);
+                
+                // Try alternative API endpoint if first one fails
+                const altResponse = await fetch('/api/delete-order', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId })
+                });
+                
+                if (altResponse.ok) {
+                    serverDeleted = true;
+                    console.log('Order deleted from server via alternative endpoint');
+                }
+            }
+        } catch (apiError) {
+            console.error('API error during order deletion:', apiError);
+        }
+        
+        // Show feedback based on result
+        if (localDeleted || serverDeleted) {
+            // Success - refresh order list
+            setTimeout(() => loadAllOrders(), 300);
+            
+            // Show a success toast notification
+            showToast(`Order #${orderId} deleted successfully`, 'success');
+        } else {
+            // Error - nothing was deleted
+            showToast('Failed to delete order. Order not found.', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        showToast(`Error: ${error.message}`, 'error');
+    }
 }
 
 // Add better handling for viewing server orders
@@ -677,63 +819,6 @@ function editOrder(orderId) {
     // Implementation will be added later
     console.log('Editing order:', orderId);
     alert('Order editing will be available in a future update');
-}
-
-// Add delete order functionality
-async function deleteOrder(orderId) {
-    console.log('Deleting order:', orderId);
-    
-    try {
-        // Delete from localStorage first
-        let localDeleted = false;
-        const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-        const updatedOrders = submittedOrders.filter(order => order.id != orderId);
-        
-        if (updatedOrders.length !== submittedOrders.length) {
-            localStorage.setItem('submittedOrders', JSON.stringify(updatedOrders));
-            localDeleted = true;
-            console.log('Order deleted from localStorage');
-        }
-        
-        // Try to delete from server
-        let serverDeleted = false;
-        try {
-            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
-            const response = await fetch('/.netlify/functions/delete-order', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ orderId })
-            });
-            
-            if (response.ok) {
-                serverDeleted = true;
-                console.log('Order deleted from server');
-            } else {
-                console.warn('Server deletion failed:', response.status);
-            }
-        } catch (apiError) {
-            console.error('API error during order deletion:', apiError);
-        }
-        
-        // Show feedback based on result
-        if (localDeleted || serverDeleted) {
-            // Success - refresh order list
-            setTimeout(() => loadAllOrders(), 300);
-            
-            // Show a success toast notification instead of alert
-            showToast('Order deleted successfully', 'success');
-        } else {
-            // Error - nothing was deleted
-            showToast('Failed to delete order. Order not found.', 'error');
-        }
-        
-    } catch (error) {
-        console.error('Error deleting order:', error);
-        showToast(`Error: ${error.message}`, 'error');
-    }
 }
 
 // Toast notification function

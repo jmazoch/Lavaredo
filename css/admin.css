@@ -280,15 +280,39 @@
     color: #ff9800;
 }
 
+/* Enhanced delete button styling */
 .btn-delete {
     color: #f44336;
     margin-left: 8px;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .btn-delete:hover {
     color: #d32f2f;
     transform: scale(1.1);
+}
+
+.btn-delete::after {
+    content: 'Delete';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.btn-delete:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 /* Products grid */
@@ -627,6 +651,86 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Enhanced delete confirmation modal */
+.delete-confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.delete-confirm-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.delete-confirm-modal.show .confirm-dialog {
+    transform: translateY(0);
+}
+
+.confirm-dialog h3 {
+    margin-bottom: 20px;
+    color: #d32f2f;
+}
+
+.confirm-dialog p {
+    margin-bottom: 25px;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.confirm-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+.confirm-btn:hover {
+    background-color: #d32f2f;
+}
+
+.cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+}
+
+.cancel-btn:hover {
+    background-color: #d5d5d5;
 }
 
 /* Responsive design */
