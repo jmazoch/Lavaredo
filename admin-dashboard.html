@@ -195,6 +195,17 @@
                 alert('Bulk delete functionality not available');
             }
         });
+        
+        // Add function to create Clear Demo Orders button if it doesn't exist
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof addClearServerOrdersButton === 'function') {
+                    addClearServerOrdersButton();
+                } else {
+                    console.warn('Clear server orders function not available');
+                }
+            }, 1000); // Delay to ensure admin.js has loaded
+        });
     </script>
 </body>
 </html>

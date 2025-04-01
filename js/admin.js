@@ -51,6 +51,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Remove test order button
+
+    // Add the clear server orders button
+    addClearButtonCSS();
+    addClearServerOrdersButton();
 });
 
 // Updates the current time display in the admin header
@@ -281,9 +285,12 @@ async function loadAllOrders() {
             }
         });
         
-        // Convert map back to array
-        const allOrders = Array.from(orderMap.values());
-        console.log(`Combined total: ${allOrders.length} orders`);
+        // Convert map back to array and filter out deleted server orders
+        const allOrders = Array.from(orderMap.values()).filter(order => {
+            const deletedServerOrders = JSON.parse(localStorage.getItem('deletedServerOrders') || '[]');
+            return !(order.id.startsWith('SERVER-') && deletedServerOrders.includes(order.id));
+        });
+        console.log(`Combined total: ${allOrders.length} orders after filtering deleted server orders`);
         
         // Clear loading indicator
         ordersTableBody.innerHTML = '';
@@ -341,7 +348,7 @@ async function loadAllOrders() {
                         year: 'numeric', 
                         month: 'short', 
                         day: 'numeric',
-                        hour: '2-digit',
+                        hour: '2-digit', 
                         minute: '2-digit'
                     });
                     console.log(`Formatted date-time:`, dateTimeFormatted);
@@ -366,7 +373,6 @@ async function loadAllOrders() {
                     <button class="btn-delete" data-id="${order.id}" title="Delete order"><i class="fas fa-trash"></i></button>
                 </td>
             `;
-            
             ordersTableBody.appendChild(row);
         });
         
@@ -385,8 +391,8 @@ async function loadAllOrders() {
                 font-size: 8px; 
                 background: #4a90e2; 
                 color: white; 
-                padding: 2px 4px;
-                border-radius: 3px;
+                padding: 2px 4px; 
+                border-radius: 3px; 
             }
             .local-source { position: relative; }
             .local-source:after { 
@@ -397,18 +403,17 @@ async function loadAllOrders() {
                 font-size: 8px; 
                 background: #888; 
                 color: white; 
-                padding: 2px 4px;
-                border-radius: 3px;
+                padding: 2px 4px; 
+                border-radius: 3px; 
             }
             .server-error-message {
-                background-color: #fff3cd;
-                color: #856404;
-                padding: 15px;
-                text-align: center;
+                background-color: #fff3cd; 
+                color: #856404; 
+                padding: 15px; 
+                text-align: center; 
             }
         `;
         document.head.appendChild(styleEl);
-        
     } catch (error) {
         console.error('Error loading orders:', error);
         ordersTableBody.innerHTML = `
@@ -522,7 +527,7 @@ function showDeleteConfirmation(orderId, customerName) {
     setTimeout(() => { modal.classList.add('show'); }, 10);
 }
 
-// Enhanced delete order function with better feedback
+// Enhanced delete order function with better feedback and server order handling
 async function deleteOrder(orderId, showToasts = true) {
     console.log('Deleting order:', orderId);
     
@@ -532,6 +537,17 @@ async function deleteOrder(orderId, showToasts = true) {
     }
     
     try {
+        // For server mock orders, store in a deleted list to prevent them from reappearing
+        if (orderId.startsWith('SERVER-')) {
+            // Track this in localStorage so we don't show it again
+            const deletedServerOrders = JSON.parse(localStorage.getItem('deletedServerOrders') || '[]');
+            if (!deletedServerOrders.includes(orderId)) {
+                deletedServerOrders.push(orderId);
+                localStorage.setItem('deletedServerOrders', JSON.stringify(deletedServerOrders));
+                console.log(`Added ${orderId} to deleted server orders list`);
+            }
+        }
+        
         // Delete from localStorage first
         let localDeleted = false;
         const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
@@ -581,7 +597,7 @@ async function deleteOrder(orderId, showToasts = true) {
         }
         
         // Show feedback based on result
-        if (localDeleted || serverDeleted) {
+        if (localDeleted || serverDeleted || orderId.startsWith('SERVER-')) {
             // Success - refresh order list
             setTimeout(() => loadAllOrders(), 300);
             
@@ -645,7 +661,6 @@ async function viewOrder(orderId) {
             `/functions/get-order?orderId=${orderId}`,
             `/netlify/functions/get-order?orderId=${orderId}`
         ];
-        
         console.log('Will try these endpoints:', possibleEndpoints);
         
         // Add debug information to modal
@@ -749,18 +764,17 @@ async function viewOrder(orderId) {
             </p>
         `;
         
-        // Continue with limited data...
         orderDetails.innerHTML = '';
         orderDetails.appendChild(warningDiv);
     }
-
+    
     // Format the order date with time
     const orderDate = new Date(order.date);
     const formattedDate = orderDate.toLocaleString('en-US', {
         year: 'numeric', 
         month: 'long', 
         day: 'numeric',
-        hour: '2-digit',
+        hour: '2-digit', 
         minute: '2-digit',
         second: '2-digit'
     });
@@ -799,9 +813,7 @@ async function viewOrder(orderId) {
     // Group items by product name, gender and size to calculate quantities
     const itemGroups = {};
     
-    // Add each ordered item
     if (order.items && order.items.length > 0) {
-        // Group items to calculate quantities
         order.items.forEach(item => {
             const key = `${item.name}-${item.gender}-${item.size}`;
             if (!itemGroups[key]) {
@@ -1085,12 +1097,12 @@ async function bulkDeleteOrders() {
                 // Remove loading modal
                 document.body.removeChild(loadingModal);
                 
-                // Show completion message
-                showToast(`Deleted ${successCount} orders. ${failCount > 0 ? `${failCount} failed.` : ''}`, 
-                           failCount > 0 ? 'warning' : 'success');
-                
                 // Refresh the orders list
                 loadAllOrders();
+                
+                // Show completion message
+                showToast(`Deleted ${successCount} orders. ${failCount > 0 ? `${failCount} failed.` : ''}`, 
+                    failCount > 0 ? 'warning' : 'success');
                 
             } catch (error) {
                 console.error('Error processing CSV:', error);
@@ -1106,3 +1118,141 @@ async function bulkDeleteOrders() {
 
 // Make initialization function available globally
 window.initAdminDashboard = initAdminDashboard;
+
+// Function to clear all server orders
+async function clearAllServerOrders() {
+    // Confirm first
+    if (!confirm("Are you sure you want to hide all SERVER- demo orders? This cannot be undone.")) {
+        return;
+    }
+    
+    try {
+        // Show a loading toast
+        showToast('Processing...', 'info');
+        
+        // Get all orders from the table
+        const orderRows = document.querySelectorAll('#ordersTableBody tr');
+        const serverOrderIds = [];
+        
+        // Find all server order IDs
+        orderRows.forEach(row => {
+            const orderIdCell = row.querySelector('td:first-child');
+            if (orderIdCell && orderIdCell.textContent.includes('SERVER-')) {
+                // Extract the order ID
+                const orderId = orderIdCell.textContent.trim().replace('#ORD-', '');
+                serverOrderIds.push(orderId);
+            }
+        });
+        
+        if (serverOrderIds.length === 0) {
+            showToast('No server orders found to clear', 'info');
+            return;
+        }
+        
+        console.log(`Found ${serverOrderIds.length} server orders to clear`);
+        
+        // Store all these IDs in the deleted list
+        const deletedServerOrders = JSON.parse(localStorage.getItem('deletedServerOrders') || '[]');
+        let newCount = 0;
+        
+        serverOrderIds.forEach(id => {
+            if (!deletedServerOrders.includes(id)) {
+                deletedServerOrders.push(id);
+                newCount++;
+            }
+        });
+        
+        localStorage.setItem('deletedServerOrders', JSON.stringify(deletedServerOrders));
+        
+        // Refresh the orders list
+        await loadAllOrders();
+        
+        // Show success message
+        showToast(`Cleared ${newCount} server demo orders`, 'success');
+        
+    } catch (error) {
+        console.error('Error clearing server orders:', error);
+        showToast(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Add a "Clear All Server Orders" button
+function addClearServerOrdersButton() {
+    // Check if button already exists
+    if (document.getElementById('clearServerOrdersBtn')) {
+        return;
+    }
+    
+    const adminActions = document.querySelector('.admin-actions');
+    if (adminActions) {
+        const clearBtn = document.createElement('button');
+        clearBtn.id = 'clearServerOrdersBtn';
+        clearBtn.className = 'btn-clear-server';
+        clearBtn.innerHTML = '<i class="fas fa-broom"></i> Clear Demo Orders';
+        clearBtn.addEventListener('click', clearAllServerOrders);
+        
+        // Insert before logout button
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+            adminActions.insertBefore(clearBtn, logoutBtn);
+        } else {
+            adminActions.appendChild(clearBtn);
+        }
+    }
+}
+
+// Add CSS for the Clear Server Orders button
+function addClearButtonCSS() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .btn-clear-server {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .btn-clear-server:hover {
+            background-color: #f57c00;
+            opacity: 0.95;
+            transform: translateY(-2px);
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Update the document ready function to add our initialization
+const originalDocReady = document.addEventListener;
+document.addEventListener = function(event, callback) {
+    if (event === 'DOMContentLoaded') {
+        const enhancedCallback = function() {
+            // Call the original callback
+            callback.apply(this, arguments);
+            
+            // Add our enhancements
+            setTimeout(() => {
+                console.log('Adding server order management features');
+                addClearButtonCSS();
+                addClearServerOrdersButton();
+                updateLoadAllOrdersFunction();
+            }, 500);
+        };
+        
+        // Call the original addEventListener with our enhanced callback
+        return originalDocReady.call(this, event, enhancedCallback);
+    } else {
+        // For all other events, proceed normally
+        return originalDocReady.apply(this, arguments);
+    }
+};
+
+// Make the functions globally available
+window.clearAllServerOrders = clearAllServerOrders;
+window.addClearServerOrdersButton = addClearServerOrdersButton;
