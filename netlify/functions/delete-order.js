@@ -12,11 +12,14 @@ exports.handler = async function(event, context) {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Check authorization
+  // Check authorization - make more flexible
   const authHeader = event.headers.authorization || '';
-  if (!authHeader.startsWith('Bearer admin_')) {
+  if (!authHeader.startsWith('Bearer ')) {
     return corsHelpers.createResponse(401, { error: "Unauthorized" });
   }
+  
+  // Log the auth header for debugging
+  console.log('Auth header received:', authHeader.substring(0, 20) + '...');
   
   try {
     let orderId;

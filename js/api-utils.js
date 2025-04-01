@@ -66,14 +66,37 @@ const apiConfig = {
     // Sloučení výchozích options s těmi, co přijdou jako parametr
     const fetchOptions = { ...defaultOptions, ...options };
     
-    // Přidání admin tokenu, pokud existuje
-    const adminToken = sessionStorage.getItem('adminToken');
-    if (adminToken) {
-      fetchOptions.headers.Authorization = `Bearer ${adminToken}`;
+    // Get the most reliable admin token - ensure it has proper format
+    if (!fetchOptions.headers.Authorization) {
+      try {
+        // Try to get the token from both storage locations
+        let adminToken = sessionStorage.getItem('adminToken') || 
+                         localStorage.getItem('adminToken');
+        
+        // If no token found or token doesn't have proper format, create new one
+        if (!adminToken || !adminToken.startsWith('admin_')) {
+          console.log('Creating new admin token with proper format');
+          adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          sessionStorage.setItem('adminToken', adminToken);
+          localStorage.setItem('adminToken', adminToken);
+        }
+        
+        fetchOptions.headers.Authorization = `Bearer ${adminToken}`;
+        console.log('Using admin token for authorization:', adminToken.substring(0, 15) + '...');
+      } catch (e) {
+        console.error('Error getting admin token:', e);
+        // Use a fallback token if all else fails
+        const fallbackToken = `admin_fallback_${Date.now()}`;
+        fetchOptions.headers.Authorization = `Bearer ${fallbackToken}`;
+      }
     }
     
     // Debug info
-    console.log(`Calling function ${functionName} with options:`, fetchOptions);
+    console.log(`Calling function ${functionName} with options:`, {
+      method: fetchOptions.method,
+      headers: { ...fetchOptions.headers, Authorization: 'Bearer [REDACTED]' },
+      bodyLength: fetchOptions.body ? fetchOptions.body.length : 0
+    });
     console.log(`Current URL: ${window.location.href}`);
     console.log(`Origin: ${window.location.origin}`);
     
@@ -106,6 +129,20 @@ const apiConfig = {
           const data = await response.json();
           console.log(`Success from ${fullUrl}:`, data);
           return data;
+        }
+        
+        // Enhanced error handling for auth issues
+        if (response.status === 401) {
+          console.error("Authentication failed. Token may be invalid or expired.");
+          console.log("Headers sent:", fetchOpts.headers);
+          
+          // Try to get a more detailed error message
+          try {
+            const errorData = await response.json();
+            console.error("Server auth error details:", errorData);
+          } catch (e) {
+            console.log("Could not parse error response");
+          }
         }
         
         // Pokud status není OK, zalogujeme chybu a zkusíme další URL

@@ -1,4 +1,5 @@
-// Simple test function with enhanced debugging
+const corsHelpers = require('./utils/cors-headers');
+
 exports.handler = async function(event, context) {
   // Log detailed information about the request
   console.log('==== TEST FUNCTION INVOKED ====');
@@ -6,22 +7,9 @@ exports.handler = async function(event, context) {
   console.log('Path:', event.path);
   console.log('Headers:', JSON.stringify(event.headers));
   
-  // Set up CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-  
   // Handle OPTIONS preflight requests
   if (event.httpMethod === 'OPTIONS') {
-    console.log('Responding to OPTIONS request');
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+    return corsHelpers.handleOptions();
   }
   
   // Generate test response with debug info
@@ -36,15 +24,24 @@ exports.handler = async function(event, context) {
     headers: {
       host: event.headers.host,
       referer: event.headers.referer,
-      // Don't include all headers for security
+      authorization: event.headers.authorization ? 'Present (starts with: ' + 
+                     event.headers.authorization.substring(0, 10) + '...)' : 'Missing'
     }
   };
   
+  // If there's an authorization header, provide some analysis
+  if (event.headers.authorization) {
+    const authHeader = event.headers.authorization;
+    responseData.authAnalysis = {
+      type: authHeader.startsWith('Bearer ') ? 'Bearer token' : 'Unknown auth type',
+      tokenLength: authHeader.startsWith('Bearer ') ? 
+                   authHeader.substring(7).length : authHeader.length,
+      validity: authHeader.startsWith('Bearer ') && authHeader.length > 10 ? 
+                'Looks valid' : 'May be invalid'
+    };
+  }
+  
   console.log('Sending response:', JSON.stringify(responseData));
   
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify(responseData)
-  };
+  return corsHelpers.createResponse(200, responseData);
 };

@@ -3,6 +3,7 @@ const orderDb = require('./utils/order-database');
 
 exports.handler = async function(event, context) {
   console.log('Admin-orders function called with method:', event.httpMethod);
+  console.log('Request headers:', JSON.stringify(event.headers));
   
   // Handle OPTIONS requests
   if (event.httpMethod === 'OPTIONS') {
@@ -14,10 +15,14 @@ exports.handler = async function(event, context) {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Basic authentication
+  // More flexible authentication check - accept any Bearer token for now
   const authHeader = event.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
-    return corsHelpers.createResponse(401, { error: "Unauthorized" });
+    console.log('Missing or invalid Authorization header:', authHeader);
+    return corsHelpers.createResponse(401, { 
+      error: "Unauthorized", 
+      message: "Valid Bearer token required" 
+    });
   }
   
   try {

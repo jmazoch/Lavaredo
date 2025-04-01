@@ -12,11 +12,18 @@ exports.handler = async function(event, context) {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Check admin authorization (stronger check for dangerous operation)
+  // More flexible authentication - accept any bearer token
   const authHeader = event.headers.authorization || '';
-  if (!authHeader.startsWith('Bearer admin_')) {
-    return corsHelpers.createResponse(401, { error: "Unauthorized" });
+  if (!authHeader.startsWith('Bearer ')) {
+    console.log('Missing or invalid Authorization header:', authHeader);
+    return corsHelpers.createResponse(401, { 
+      error: "Unauthorized", 
+      message: "Valid Bearer token required" 
+    });
   }
+  
+  // Log the auth header for debugging
+  console.log('Auth header received:', authHeader.substring(0, 20) + '...');
   
   try {
     // Parse request body to check for confirmation

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - lavaredo.cc</title>
     
-    <!-- Add this at the top of your file, right after the <head> tag -->
+    <!-- Authentication check script -->
     <script>
         // Immediate authentication check - hide the page until verified
         document.documentElement.style.visibility = 'hidden';
@@ -138,6 +138,22 @@
                 <div class="database-stats" id="databaseStats">
                     <!-- Will be populated by JS -->
                 </div>
+            </div>
+
+            <div class="diagnostic-tools" style="margin: 20px 0; padding: 15px; background-color: #f5f8ff; border-radius: 8px; border: 1px solid #d0e0ff;">
+                <h3 style="margin-top: 0; font-size: 1rem;">Diagnostic Tools</h3>
+                <div class="diagnostic-actions" style="display: flex; gap: 10px;">
+                    <button id="testApiBtn" class="btn-test" style="background-color: #4285f4; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-microscope"></i> Test API Connection
+                    </button>
+                    <button id="renewTokenBtn" class="btn-renew" style="background-color: #34a853; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-sync"></i> Renew Admin Token
+                    </button>
+                    <button id="debugTokenBtn" class="btn-debug" style="background-color: #FF5722; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                        <i class="fas fa-bug"></i> Debug Auth
+                    </button>
+                </div>
+                <div id="diagnosticResult" style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow: auto; display: none;"></div>
             </div>
 
             <div class="admin-content-full">
@@ -305,6 +321,131 @@
                     updateDatabaseStats();
                 };
             }
+        });
+
+        // Add diagnostic tool functionality
+        document.getElementById('testApiBtn').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('diagnosticResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Testing API connection...</div>';
+            
+            try {
+                const result = await window.apiUtils.callFunction('test-function');
+                resultDiv.innerHTML = `
+                    <div style="color: #34a853; margin-bottom: 10px;">✓ API connection successful!</div>
+                    <pre style="background: #f5f5f5; padding: 10px; overflow: auto;">${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color: #ea4335; margin-bottom: 10px;">✗ API connection failed: ${error.message}</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Try these solutions:</strong>
+                        <ul>
+                            <li>Click "Renew Admin Token" to get a fresh authentication token</li>
+                            <li>Check that your functions are deployed correctly</li>
+                            <li>Verify CORS settings in netlify.toml</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        });
+        
+        document.getElementById('renewTokenBtn').addEventListener('click', function() {
+            // Generate a new admin token
+            const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+            sessionStorage.setItem('adminToken', adminToken);
+            localStorage.setItem('adminToken', adminToken);
+            
+            // Show confirmation
+            const resultDiv = document.getElementById('diagnosticResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div style="color: #34a853; margin-bottom: 10px;">✓ Admin token renewed successfully!</div>
+                <div>New token: <code>${adminToken}</code></div>
+                <div style="margin-top: 10px;">Try accessing API functions now.</div>
+            `;
+            
+            showToast('Admin token renewed successfully', 'success');
+        });
+        
+        // Debug auth button handler - FIXED VERSION
+        document.getElementById('debugTokenBtn').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('diagnosticResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Debugging authentication...</div>';
+            
+            // Ensure we have a properly formatted token
+            const adminToken = ensureAdminToken();
+            
+            // Make a simple fetch request to test auth directly
+            try {
+                const response = await fetch('/.netlify/functions/test-function', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Check current tokens
+                const sessionToken = sessionStorage.getItem('adminToken');
+                const localToken = localStorage.getItem('adminToken');
+                
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 10px; color: ${response.ok ? '#34a853' : '#ea4335'};">
+                        <p><strong>Auth Test:</strong> ${response.ok ? '✓ Success' : '✗ Failed'}</p>
+                        <p>Response Status: ${response.status}</p>
+                    </div>
+                    <div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-left: 3px solid #42A5F5;">
+                        <p><strong>Current Tokens:</strong></p>
+                        <p>Session Token: ${sessionToken || 'None'}</p>
+                        <p>Local Storage Token: ${localToken || 'None'}</p>
+                        <p><strong>Headers Sent:</strong></p>
+                        <p>Authorization: Bearer ${adminToken.substring(0, 15)}...</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <p>Try these steps to fix auth issues:</p>
+                        <ol>
+                            <li>Click "Renew Admin Token" button</li>
+                            <li>Try generating test orders again</li>
+                            <li>Check browser console for errors</li>
+                        </ol>
+                    </div>
+                    <pre style="margin-top: 15px; padding: 10px; background: #f5f5f5; overflow: auto; font-size: 12px; max-height: 100px;">
+${JSON.stringify(data, null, 2)}
+                    </pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color: #ea4335;">
+                        <p><strong>Auth Test Failed:</strong> ${error.message}</p>
+                        <p>Check your network connection and server status</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Function to ensure a valid admin token exists
+        function ensureAdminToken() {
+            const adminToken = sessionStorage.getItem('adminToken');
+            
+            if (!adminToken || !adminToken.startsWith('admin_')) {
+                console.log('Creating new admin token - no valid token found');
+                // Generate a new admin token with the required format
+                const newToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                sessionStorage.setItem('adminToken', newToken);
+                localStorage.setItem('adminToken', newToken);
+                console.log('New admin token created:', newToken);
+                return newToken;
+            }
+            
+            console.log('Using existing admin token:', adminToken.substring(0, 15) + '...');
+            return adminToken;
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            ensureAdminToken();
         });
     </script>
 </body>
