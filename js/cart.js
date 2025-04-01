@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Generate order ID and timestamp
-            const orderId = Math.floor(1000 + Math.random() * 9000);
+            const orderId = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
             const timestamp = new Date().toISOString();
             
             // Prepare order data
@@ -244,6 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (const url of urls) {
                     try {
                         console.log(`Zkouším odeslat na: ${url}`);
+                        const loadingIndicator = document.createElement('div');
+                        loadingIndicator.className = 'loading-overlay';
+                        loadingIndicator.innerHTML = '<div class="spinner"></div><p>Processing order...</p>';
+                        document.body.appendChild(loadingIndicator);
+                        
                         response = await fetch(url, {
                             method: 'POST',
                             headers: {
@@ -251,6 +256,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             },
                             body: JSON.stringify(orderData)
                         });
+                        
+                        document.body.removeChild(loadingIndicator);
                         
                         if (response.ok) {
                             console.log(`Úspěch! URL ${url} funguje.`);
@@ -262,6 +269,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     } catch (fetchError) {
                         console.warn(`Chyba při volání ${url}:`, fetchError);
                         error = fetchError.message;
+                        
+                        // Remove loading indicator if it exists
+                        const loadingIndicator = document.querySelector('.loading-overlay');
+                        if (loadingIndicator) document.body.removeChild(loadingIndicator);
                     }
                 }
                 
@@ -270,21 +281,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     console.log('Objednávka odeslána úspěšně:', result);
                     
-                    // Uložíme také do localStorage jako zálohu
+                    // Always store in localStorage as backup
                     const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
                     existingOrders.push(orderData);
                     localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
                     
                     // Vyčistíme košík
                     localStorage.setItem('shopping_cart', JSON.stringify([]));
-                    
-                    // Add analytics tracking if needed
-                    if (window.gtag) {
-                        window.gtag('event', 'order_submitted', {
-                            'event_category': 'ecommerce',
-                            'event_label': orderData.id
-                        });
-                    }
                     
                     return orderData.id;
                 } else {
@@ -300,8 +303,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Vyčistíme košík
                     localStorage.setItem('shopping_cart', JSON.stringify([]));
                     
-                    // Add more visible feedback to user about the fallback
-                    alert('We saved your pre-order locally. Our team will get in touch soon.');
+                    // Notify user about local storage
+                    alert('We\'ve saved your order locally. Our team will contact you soon!');
                     
                     return orderData.id;
                 }

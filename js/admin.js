@@ -358,6 +358,7 @@ async function loadAllOrders() {
                         <button class="btn-status ${statusClass === 'added' ? 'active' : ''}" data-id="${order.id}" data-status="added">Added in order</button>
                         <button class="btn-status ${statusClass === 'paid' ? 'active' : ''}" data-id="${order.id}" data-status="paid">Paid</button>
                     </div>
+                    <button class="btn-delete" data-id="${order.id}" title="Delete order"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             
@@ -436,6 +437,16 @@ function setupOrderButtons() {
                     b.classList.remove('active');
                 });
                 this.classList.add('active');
+            }
+        });
+    });
+    
+    // Delete buttons
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-id');
+            if (confirm(`Are you sure you want to delete order #${orderId}? This cannot be undone.`)) {
+                deleteOrder(orderId);
             }
         });
     });
@@ -666,6 +677,102 @@ function editOrder(orderId) {
     // Implementation will be added later
     console.log('Editing order:', orderId);
     alert('Order editing will be available in a future update');
+}
+
+// Add delete order functionality
+async function deleteOrder(orderId) {
+    console.log('Deleting order:', orderId);
+    
+    try {
+        // Delete from localStorage first
+        let localDeleted = false;
+        const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+        const updatedOrders = submittedOrders.filter(order => order.id != orderId);
+        
+        if (updatedOrders.length !== submittedOrders.length) {
+            localStorage.setItem('submittedOrders', JSON.stringify(updatedOrders));
+            localDeleted = true;
+            console.log('Order deleted from localStorage');
+        }
+        
+        // Try to delete from server
+        let serverDeleted = false;
+        try {
+            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
+            const response = await fetch('/.netlify/functions/delete-order', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            });
+            
+            if (response.ok) {
+                serverDeleted = true;
+                console.log('Order deleted from server');
+            } else {
+                console.warn('Server deletion failed:', response.status);
+            }
+        } catch (apiError) {
+            console.error('API error during order deletion:', apiError);
+        }
+        
+        // Show feedback based on result
+        if (localDeleted || serverDeleted) {
+            // Success - refresh order list
+            setTimeout(() => loadAllOrders(), 300);
+            
+            // Show a success toast notification instead of alert
+            showToast('Order deleted successfully', 'success');
+        } else {
+            // Error - nothing was deleted
+            showToast('Failed to delete order. Order not found.', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        showToast(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <span class="toast-close">&times;</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Show toast with animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
+    
+    // Close on click
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        });
+    }
 }
 
 // Add export functionality
