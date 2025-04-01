@@ -625,19 +625,44 @@ async function viewOrder(orderId) {
             </div>
         `;
         
-        // Try to fetch from server
+        // Try multiple possible API endpoints to handle different Netlify configurations
+        const possibleEndpoints = [
+            `/.netlify/functions/get-order?orderId=${orderId}`,
+            `/api/get-order?orderId=${orderId}`,
+            `/functions/get-order?orderId=${orderId}`
+        ];
+        
+        let fetchError = null;
+        
+        // Try to fetch from server - try each endpoint until one works
         try {
             const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
-            const response = await fetch(`/.netlify/functions/get-order?orderId=${orderId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            let response = null;
             
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            for (const endpoint of possibleEndpoints) {
+                try {
+                    console.log(`Trying to fetch order from endpoint: ${endpoint}`);
+                    response = await fetch(endpoint, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`Successfully fetched from ${endpoint}`);
+                        break;
+                    } else {
+                        console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
+                    }
+                } catch (endpointError) {
+                    console.warn(`Error with endpoint ${endpoint}:`, endpointError);
+                }
+            }
+            
+            if (!response || !response.ok) {
+                throw new Error(`Server returned ${response ? response.status : 'no response'}`);
             }
             
             const result = await response.json();
@@ -660,6 +685,35 @@ async function viewOrder(orderId) {
         }
     }
     
+    // If still no order after trying to fetch, show a fallback UI with order ID
+    if (!order) {
+        console.log('Failed to fetch order data - showing fallback UI');
+        
+        order = {
+            id: orderId,
+            customer: 'Unknown Customer',
+            email: 'Not available',
+            phone: 'Not available',
+            date: new Date().toISOString(),
+            status: 'unknown',
+            source: 'server',
+            items: []
+        };
+        
+        // Show a warning in the modal
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'server-warning';
+        warningDiv.innerHTML = `
+            <p style="padding: 10px 15px; background-color: #fff3cd; color: #856404; border-left: 4px solid #ffeeba; margin-bottom: 20px;">
+                <strong>Limited data available:</strong> This order could not be fully loaded from the server.
+            </p>
+        `;
+        
+        // Continue with limited data...
+        orderDetails.innerHTML = '';
+        orderDetails.appendChild(warningDiv);
+    }
+
     // Format the order date with time
     const orderDate = new Date(order.date);
     const formattedDate = orderDate.toLocaleString('en-US', {
@@ -705,9 +759,7 @@ async function viewOrder(orderId) {
     // Group items by product name, gender and size to calculate quantities
     const itemGroups = {};
     
-    // Add each ordered item
     if (order.items && order.items.length > 0) {
-        // Group items to calculate quantities
         order.items.forEach(item => {
             const key = `${item.name}-${item.gender}-${item.size}`;
             if (!itemGroups[key]) {
@@ -745,13 +797,11 @@ async function viewOrder(orderId) {
             </table>
         </div>
         <div class="order-actions">
-            <div class="order-status-options">
-                <h4>Update Order Status:</h4>
-                <div class="modal-status-buttons">
-                    <button class="btn-status ${order.status === 'preordered' ? 'active' : ''}" data-id="${order.id}" data-status="preordered">Preordered</button>
-                    <button class="btn-status ${order.status === 'added' ? 'active' : ''}" data-id="${order.id}" data-status="added">Added in Order</button>
-                    <button class="btn-status ${order.status === 'paid' ? 'active' : ''}" data-id="${order.id}" data-status="paid">Paid</button>
-                </div>
+            <h4>Update Order Status:</h4>
+            <div class="modal-status-buttons">
+                <button class="btn-status ${order.status === 'preordered' ? 'active' : ''}" data-id="${order.id}" data-status="preordered">Preordered</button>
+                <button class="btn-status ${order.status === 'added' ? 'active' : ''}" data-id="${order.id}" data-status="added">Added in Order</button>
+                <button class="btn-status ${order.status === 'paid' ? 'active' : ''}" data-id="${order.id}" data-status="paid">Paid</button>
             </div>
         </div>
     `;
@@ -846,7 +896,6 @@ async function updateOrderStatus(orderId, status) {
         
         // Refresh the orders table
         setTimeout(() => loadAllOrders(), 500);
-        
     } catch (error) {
         console.error('Error updating order status:', error);
         alert('Error updating order status: ' + error.message);
@@ -870,7 +919,6 @@ function showToast(message, type = 'info') {
         </div>
         <span class="toast-close">&times;</span>
     `;
-    
     document.body.appendChild(toast);
     
     // Show toast with animation
