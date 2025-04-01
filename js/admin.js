@@ -523,11 +523,13 @@ function showDeleteConfirmation(orderId, customerName) {
 }
 
 // Enhanced delete order function with better feedback
-async function deleteOrder(orderId) {
+async function deleteOrder(orderId, showToasts = true) {
     console.log('Deleting order:', orderId);
     
     // Show loading state
-    showToast('Deleting order...', 'info');
+    if (showToasts) {
+        showToast('Deleting order...', 'info');
+    }
     
     try {
         // Delete from localStorage first
@@ -584,14 +586,20 @@ async function deleteOrder(orderId) {
             setTimeout(() => loadAllOrders(), 300);
             
             // Show a success toast notification
-            showToast(`Order #${orderId} deleted successfully`, 'success');
+            if (showToasts) {
+                showToast(`Order #${orderId} deleted successfully`, 'success');
+            }
         } else {
             // Error - nothing was deleted
-            showToast('Failed to delete order. Order not found.', 'error');
+            if (showToasts) {
+                showToast('Failed to delete order. Order not found.', 'error');
+            }
         }
     } catch (error) {
         console.error('Error deleting order:', error);
-        showToast(`Error: ${error.message}`, 'error');
+        if (showToasts) {
+            showToast(`Error: ${error.message}`, 'error');
+        }
     }
 }
 
@@ -622,15 +630,29 @@ async function viewOrder(orderId) {
             <div class="loading-indicator">
                 <div class="spinner"></div>
                 <p>Loading order details from server...</p>
+                <p class="endpoint-info">Order ID: ${orderId}</p>
             </div>
         `;
+        
+        // For debugging, show all available paths
+        const basePath = window.location.origin;
+        console.log('Base URL path:', basePath);
         
         // Try multiple possible API endpoints to handle different Netlify configurations
         const possibleEndpoints = [
             `/.netlify/functions/get-order?orderId=${orderId}`,
             `/api/get-order?orderId=${orderId}`,
-            `/functions/get-order?orderId=${orderId}`
+            `/functions/get-order?orderId=${orderId}`,
+            `/netlify/functions/get-order?orderId=${orderId}`
         ];
+        
+        console.log('Will try these endpoints:', possibleEndpoints);
+        
+        // Add debug information to modal
+        const endpointInfoEl = orderDetails.querySelector('.endpoint-info');
+        if (endpointInfoEl) {
+            endpointInfoEl.textContent += ` - Trying ${possibleEndpoints.length} endpoints...`;
+        }
         
         let fetchError = null;
         
@@ -641,7 +663,11 @@ async function viewOrder(orderId) {
             
             for (const endpoint of possibleEndpoints) {
                 try {
-                    console.log(`Trying to fetch order from endpoint: ${endpoint}`);
+                    console.log(`Trying to fetch from: ${endpoint}`);
+                    if (endpointInfoEl) {
+                        endpointInfoEl.textContent = `Trying: ${endpoint.split('?')[0]}`;
+                    }
+                    
                     response = await fetch(endpoint, {
                         method: 'GET',
                         headers: {
@@ -650,14 +676,16 @@ async function viewOrder(orderId) {
                         }
                     });
                     
+                    console.log(`Response status from ${endpoint}:`, response.status);
+                    
                     if (response.ok) {
-                        console.log(`Successfully fetched from ${endpoint}`);
+                        console.log(`✅ Successfully fetched from ${endpoint}`);
                         break;
                     } else {
-                        console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
+                        console.warn(`❌ ${endpoint} returned ${response.status}`);
                     }
                 } catch (endpointError) {
-                    console.warn(`Error with endpoint ${endpoint}:`, endpointError);
+                    console.warn(`❌ Error with ${endpoint}:`, endpointError);
                 }
             }
             
@@ -677,7 +705,19 @@ async function viewOrder(orderId) {
             console.error('Error fetching order from server:', error);
             orderDetails.innerHTML = `
                 <div class="error-message">
-                    <p>Error loading order: ${error.message}</p>
+                    <p><strong>Error loading order:</strong> ${error.message}</p>
+                    <div class="diagnostic-info">
+                        <p>Server Endpoints Tried:</p>
+                        <ul>
+                            ${possibleEndpoints.map(url => `<li>${url}</li>`).join('')}
+                        </ul>
+                        <p>To fix this issue:</p>
+                        <ul>
+                            <li>Make sure your serverless functions are deployed</li>
+                            <li>Check Netlify function logs for errors</li>
+                            <li>Verify the get-order.js function exists in both directories</li>
+                        </ul>
+                    </div>
                     <button class="close-btn" onclick="document.getElementById('orderModal').style.display='none'">Close</button>
                 </div>
             `;
@@ -759,7 +799,9 @@ async function viewOrder(orderId) {
     // Group items by product name, gender and size to calculate quantities
     const itemGroups = {};
     
+    // Add each ordered item
     if (order.items && order.items.length > 0) {
+        // Group items to calculate quantities
         order.items.forEach(item => {
             const key = `${item.name}-${item.gender}-${item.size}`;
             if (!itemGroups[key]) {
@@ -971,11 +1013,95 @@ function exportOrders() {
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
     link.setAttribute('download', 'lavaredo-orders.csv');
+    link.setAttribute('href', encodedUri);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Bulk delete orders function
+async function bulkDeleteOrders() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    
+    input.addEventListener('change', async function(e) {
+        if (!this.files || !this.files[0]) return;
+        
+        const file = this.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = async function(event) {
+            try {
+                const csvContent = event.target.result;
+                const rows = csvContent.split('\n');
+                
+                // Skip header row
+                const orderIds = rows.slice(1)
+                    .filter(row => row.trim())  // Skip empty rows
+                    .map(row => row.split(',')[0].trim());
+                
+                if (!orderIds.length) {
+                    alert('No valid orders found in CSV file');
+                    return;
+                }
+                
+                const confirmDelete = confirm(`Are you sure you want to delete these ${orderIds.length} orders?\n\n${orderIds.join(', ')}`);
+                
+                if (!confirmDelete) return;
+                
+                // Show loading modal
+                const loadingModal = document.createElement('div');
+                loadingModal.className = 'loading-overlay';
+                loadingModal.innerHTML = `
+                    <div class="spinner"></div>
+                    <p>Deleting <strong>${orderIds.length}</strong> orders...</p>
+                    <div id="deleteProgress">0/${orderIds.length} completed</div>
+                `;
+                document.body.appendChild(loadingModal);
+                
+                // Process each order
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (let i = 0; i < orderIds.length; i++) {
+                    try {
+                        const orderId = orderIds[i];
+                        await deleteOrder(orderId, false); // Don't show individual toasts
+                        successCount++;
+                    } catch (err) {
+                        console.error('Error deleting order:', err);
+                        failCount++;
+                    }
+                    
+                    // Update progress
+                    const progress = document.getElementById('deleteProgress');
+                    if (progress) {
+                        progress.textContent = `${i+1}/${orderIds.length} completed`;
+                    }
+                }
+                
+                // Remove loading modal
+                document.body.removeChild(loadingModal);
+                
+                // Show completion message
+                showToast(`Deleted ${successCount} orders. ${failCount > 0 ? `${failCount} failed.` : ''}`, 
+                           failCount > 0 ? 'warning' : 'success');
+                
+                // Refresh the orders list
+                loadAllOrders();
+                
+            } catch (error) {
+                console.error('Error processing CSV:', error);
+                alert('Error processing CSV file: ' + error.message);
+            }
+        };
+        
+        reader.readAsText(file);
+    });
+    
+    input.click();
 }
 
 // Make initialization function available globally

@@ -327,6 +327,27 @@
     transform: translateX(-50%) translateY(0);
 }
 
+/* Bulk delete button styling */
+.btn-delete-bulk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #d32f2f;
+    color: white;
+}
+
+.btn-delete-bulk:hover {
+    background-color: #b71c1c;
+    opacity: 0.95;
+    transform: translateY(-2px);
+}
+
 /* Products grid */
 .products-grid {
     display: grid;
@@ -815,6 +836,34 @@
 
 .error-message .close-btn:hover {
     background-color: #555;
+}
+
+/* Diagnostic info styling */
+.diagnostic-info {
+    background-color: #f8f8f8;
+    border-left: 4px solid #2196f3;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.diagnostic-info ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.diagnostic-info li {
+    margin-bottom: 5px;
+}
+
+.endpoint-info {
+    font-size: 0.85rem;
+    margin-top: 10px;
+    color: #666;
+    font-family: monospace;
+    max-width: 100%;
+    overflow-wrap: break-word;
 }
 
 /* Responsive design */

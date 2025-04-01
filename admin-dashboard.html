@@ -123,6 +123,7 @@
                 <div class="admin-actions">
                     <button id="refreshOrdersBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Refresh Data</button>
                     <button id="exportOrdersBtn" class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+                    <button id="bulkDeleteBtn" class="btn-delete-bulk"><i class="fas fa-trash-alt"></i> Bulk Delete</button>
                     <button id="adminLogoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
@@ -184,6 +185,14 @@
                 exportOrders();
             } else {
                 alert('Export functionality not available');
+            }
+        });
+        
+        document.getElementById('bulkDeleteBtn').addEventListener('click', function() {
+            if (typeof bulkDeleteOrders === 'function') {
+                bulkDeleteOrders();
+            } else {
+                alert('Bulk delete functionality not available');
             }
         });
     </script>
