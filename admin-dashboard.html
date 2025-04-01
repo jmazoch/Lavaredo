@@ -128,6 +128,18 @@
                 </div>
             </div>
             
+            <div class="admin-data-actions">
+                <button id="generateTestOrdersBtn" class="btn-generate">
+                    <i class="fas fa-plus-circle"></i> Generate Test Orders
+                </button>
+                <button id="resetDatabaseBtn" class="btn-danger">
+                    <i class="fas fa-trash-alt"></i> Reset Database
+                </button>
+                <div class="database-stats" id="databaseStats">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
             <div class="admin-content-full">
                 <div id="orders" class="admin-section active">
                     <div class="section-header">
@@ -206,6 +218,93 @@
                     console.warn('Clear server orders function not available');
                 }
             }, 1000); // Delay to ensure admin.js has loaded
+        });
+
+        // Database management functions
+        async function generateTestOrders() {
+            if (!confirm("Generate 5 test orders?")) return;
+            
+            try {
+                const result = await window.apiUtils.callFunction('admin-generate-test-orders', {
+                    method: 'POST',
+                    body: JSON.stringify({ count: 5 })
+                });
+                
+                if (result && result.success) {
+                    showToast(`Generated ${result.count} test orders`, 'success');
+                    loadAllOrders();
+                } else {
+                    showToast('Failed to generate test orders', 'error');
+                }
+            } catch (error) {
+                console.error('Error generating test orders:', error);
+                showToast(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function resetDatabase() {
+            if (!confirm("⚠️ WARNING: This will delete ALL orders. Are you sure?")) return;
+            if (!confirm("❌ FINAL WARNING: This action cannot be undone. Proceed?")) return;
+            
+            try {
+                const result = await window.apiUtils.callFunction('admin-reset-database', {
+                    method: 'POST',
+                    body: JSON.stringify({ confirm: true })
+                });
+                
+                if (result && result.success) {
+                    showToast('Database reset successfully', 'success');
+                    loadAllOrders();
+                } else {
+                    showToast('Failed to reset database', 'error');
+                }
+            } catch (error) {
+                console.error('Error resetting database:', error);
+                showToast(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Add event listeners when document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attach event handlers to the new buttons
+            document.getElementById('generateTestOrdersBtn')?.addEventListener('click', generateTestOrders);
+            document.getElementById('resetDatabaseBtn')?.addEventListener('click', resetDatabase);
+            
+            // Update the database stats display
+            const updateDatabaseStats = async () => {
+                try {
+                    const statsDisplay = document.getElementById('databaseStats');
+                    if (!statsDisplay) return;
+                    
+                    const result = await window.apiUtils.callFunction('admin-orders');
+                    if (result && result.stats) {
+                        const stats = result.stats;
+                        let html = `<strong>Total Orders:</strong> ${stats.totalOrders}`;
+                        
+                        if (stats.statuses) {
+                            html += '<div class="status-breakdown">';
+                            for (const [status, count] of Object.entries(stats.statuses)) {
+                                html += `<span class="status-badge ${status}">${status}: ${count}</span>`;
+                            }
+                            html += '</div>';
+                        }
+                        
+                        statsDisplay.innerHTML = html;
+                    }
+                } catch (error) {
+                    console.error('Error updating database stats:', error);
+                }
+            };
+            
+            // Update stats initially and after order list is loaded
+            updateDatabaseStats();
+            const originalLoadAllOrders = window.loadAllOrders;
+            if (originalLoadAllOrders) {
+                window.loadAllOrders = async function() {
+                    await originalLoadAllOrders.apply(this, arguments);
+                    updateDatabaseStats();
+                };
+            }
         });
     </script>
 </body>

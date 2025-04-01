@@ -1,29 +1,15 @@
-// Serverless function to handle order submission
+const corsHelpers = require('./utils/cors-headers');
+const orderDb = require('./utils/order-database');
+
 exports.handler = async function(event, context) {
-  // Set up CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-  
   // Handle OPTIONS preflight requests
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204, // No content for OPTIONS
-      headers,
-      body: ''
-    };
+    return corsHelpers.handleOptions();
   }
   
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      headers,
-      body: JSON.stringify({ error: "Method Not Allowed" })
-    };
+    return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
   console.log('Submit order function called');
@@ -37,50 +23,35 @@ exports.handler = async function(event, context) {
     // Validate required fields
     if (!data.customer || !data.email || !data.items) {
       console.log('Missing required fields');
-      return { 
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing required fields" })
-      };
+      return corsHelpers.createResponse(400, { error: "Missing required fields" });
     }
     
-    // Generate a unique order ID if not provided
-    const orderId = data.id || `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const timestamp = new Date().toISOString();
-    
-    // Create the order object with complete data
+    // Prepare the order object
     const orderData = {
-      id: orderId,
+      id: data.id || `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
       customer: data.customer,
       email: data.email,
       phone: data.phone || '',
-      date: timestamp,
+      date: new Date().toISOString(),
       timestamp: Date.now(),
       items: data.items,
       status: 'preordered'
     };
     
-    // Log the order details (will appear in Netlify function logs)
-    console.log(`New order submitted: #${orderId} by ${orderData.customer}`);
+    // Save the order to our database
+    const savedOrder = orderDb.saveOrder(orderData);
+    console.log(`New order saved: #${savedOrder.id} by ${savedOrder.customer}`);
     
-    // Here you would typically save the order to a database
-    // For now, just return success
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        success: true,
-        message: "Order submitted successfully",
-        orderId: orderId
-      })
-    };
+    return corsHelpers.createResponse(200, { 
+      success: true,
+      message: "Order submitted successfully",
+      orderId: savedOrder.id
+    });
   } catch (error) {
     console.log("Error processing order:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: "Failed to process order", details: error.message })
-    };
+    return corsHelpers.createResponse(500, { 
+      error: "Failed to process order", 
+      details: error.message 
+    });
   }
 };

@@ -1,24 +1,25 @@
 const corsHelpers = require('./utils/cors-headers');
+const orderDb = require('./utils/order-database');
 
 exports.handler = async function(event, context) {
-  // Zpracování OPTIONS requestů
+  // Handle OPTIONS requests
   if (event.httpMethod === 'OPTIONS') {
     return corsHelpers.handleOptions();
   }
   
-  // Pouze povolit GET requesty
+  // Only allow GET requests
   if (event.httpMethod !== "GET") {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Kontrola autorizace
+  // Check authorization
   const token = event.headers.authorization;
   if (!token || !token.startsWith('Bearer ')) {
     return corsHelpers.createResponse(401, { error: "Unauthorized" });
   }
   
   try {
-    // Získání ID objednávky z parametrů dotazu
+    // Get order ID from query parameters
     const orderId = event.queryStringParameters?.orderId;
     
     if (!orderId) {
@@ -27,21 +28,29 @@ exports.handler = async function(event, context) {
     
     console.log(`Fetching order details for ID: ${orderId}`);
     
-    // Zpracování známých vzorů serverových objednávek (začínajících SERVER-)
+    // First try to get the order from our database
+    let order = orderDb.getOrderById(orderId);
+    
+    // If found in database, return it
+    if (order) {
+      console.log(`Order ${orderId} found in database`);
+      return corsHelpers.createResponse(200, { order });
+    }
+    
+    // If not found but starts with SERVER-, generate mock data
     if (orderId.startsWith('SERVER-')) {
-      // Parse any numeric information from the ID to create deterministic but varied data
+      // Use the existing code to generate a mock server order
       const idNumber = parseInt(orderId.replace('SERVER-', '')) || Date.now();
-      const seedValue = idNumber % 10000; // Get a consistent seed value for this order
+      const seedValue = idNumber % 10000;
       
-      // Create sample order with the requested ID using seedValue to vary data
-      const order = {
+      order = {
         id: orderId,
         customer: `Customer ${seedValue % 100}`,
         email: `customer${seedValue % 100}@example.com`,
         phone: `+420 ${(seedValue % 900) + 100} ${(seedValue % 900) + 100} ${(seedValue % 900) + 100}`,
-        date: new Date(Date.now() - (seedValue * 60000)).toISOString(), // Vary the date
+        date: new Date(Date.now() - (seedValue * 60000)).toISOString(),
         timestamp: Date.now() - (seedValue * 60000),
-        status: ["preordered", "added", "paid"][seedValue % 3], // Vary the status
+        status: ["preordered", "added", "paid"][seedValue % 3],
         source: "server",
         items: [
           { 
@@ -69,7 +78,7 @@ exports.handler = async function(event, context) {
       return corsHelpers.createResponse(200, { order });
     }
     
-    // Pro objednávky, které nejsou SERVER-, vrátí 404
+    // Order not found
     return corsHelpers.createResponse(404, { 
       error: "Order not found", 
       message: "Order ID not recognized" 

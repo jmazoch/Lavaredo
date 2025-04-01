@@ -1,17 +1,18 @@
 const corsHelpers = require('./utils/cors-headers');
+const orderDb = require('./utils/order-database');
 
 exports.handler = async function(event, context) {
-  // Zpracování OPTIONS requestů
+  // Handle OPTIONS requests
   if (event.httpMethod === 'OPTIONS') {
     return corsHelpers.handleOptions();
   }
   
-  // Pouze povolit POST nebo DELETE requesty
+  // Only allow POST or DELETE requests
   if (event.httpMethod !== "POST" && event.httpMethod !== "DELETE") {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Kontrola autorizace
+  // Check authorization
   const authHeader = event.headers.authorization || '';
   if (!authHeader.startsWith('Bearer admin_')) {
     return corsHelpers.createResponse(401, { error: "Unauthorized" });
@@ -20,12 +21,12 @@ exports.handler = async function(event, context) {
   try {
     let orderId;
     
-    // Získání ID objednávky z těla requestu nebo parametrů
+    // Get order ID from request body or parameters
     if (event.httpMethod === "POST") {
       const data = JSON.parse(event.body);
       orderId = data.orderId;
     } else {
-      // Pro DELETE request, získat z queryStringParameters
+      // For DELETE request, get from queryStringParameters
       orderId = event.queryStringParameters?.orderId;
     }
     
@@ -35,7 +36,7 @@ exports.handler = async function(event, context) {
     
     console.log(`Request to delete order: ${orderId}`);
     
-    // Speciální zpracování pro objednávky s prefixem SERVER- (mock objednávky)
+    // Special handling for SERVER- prefixed orders
     if (orderId.startsWith('SERVER-')) {
       return corsHelpers.createResponse(200, {
         success: true,
@@ -45,11 +46,21 @@ exports.handler = async function(event, context) {
       });
     }
     
-    // V reálné implementaci byste objednávku smazali z databáze
+    // Try to delete from database
+    const deleted = orderDb.deleteOrder(orderId);
     
+    if (deleted) {
+      console.log(`Order ${orderId} deleted successfully from database`);
+    } else {
+      console.log(`Order ${orderId} not found in database`);
+    }
+    
+    // Return success regardless if we found it or not
     return corsHelpers.createResponse(200, {
       success: true,
-      message: `Order ${orderId} has been deleted successfully`,
+      message: deleted 
+        ? `Order ${orderId} has been deleted successfully` 
+        : `Order ${orderId} was not found but operation completed`,
       orderId: orderId
     });
   } catch (error) {

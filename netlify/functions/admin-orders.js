@@ -1,41 +1,49 @@
 const corsHelpers = require('./utils/cors-headers');
+const orderDb = require('./utils/order-database');
 
 exports.handler = async function(event, context) {
   console.log('Admin-orders function called with method:', event.httpMethod);
   
-  // Zpracování OPTIONS requestů
+  // Handle OPTIONS requests
   if (event.httpMethod === 'OPTIONS') {
     return corsHelpers.handleOptions();
   }
   
-  // Pouze povolit GET requesty
+  // Only allow GET requests
   if (event.httpMethod !== "GET") {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Základní autentizace
+  // Basic authentication
   const authHeader = event.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     return corsHelpers.createResponse(401, { error: "Unauthorized" });
   }
   
   try {
-    // Generování odpovědi s aktuálním časovým razítkem
-    const currentTime = new Date().toISOString();
-    console.log('Function executed at:', currentTime);
+    // Get all orders from the database
+    const orders = orderDb.getAllOrders();
+    console.log(`Returning ${orders.length} orders from database`);
     
-    // Čistá odpověď bez testovacích dat
+    // Get database statistics
+    const stats = orderDb.getStats();
+    
+    // Get the current timestamp
+    const currentTime = new Date().toISOString();
+    
+    // Create the response with orders and stats
     const response = {
-      message: "Admin orders function is working!",
+      message: "Orders retrieved successfully",
       timestamp: currentTime,
-      orders: [] // Prázdné pole objednávek - skutečné objednávky budou z databáze
+      stats: stats,
+      orders: orders
     };
     
     return corsHelpers.createResponse(200, response);
   } catch (error) {
-    console.error("Error in admin-orders function:", error);
+    console.error("Error retrieving orders:", error);
     return corsHelpers.createResponse(500, { 
-      error: "Server error", 
+      error: "Failed to retrieve orders", 
       details: error.message 
     });
   }
