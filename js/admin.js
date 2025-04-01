@@ -596,26 +596,12 @@ async function deleteOrder(orderId) {
 }
 
 // Add better handling for viewing server orders
-function viewOrder(orderId) {
+async function viewOrder(orderId) {
     console.log('Viewing order:', orderId);
     
     // Check both local and server orders
     const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
     let order = submittedOrders.find(order => order.id == orderId);
-    
-    // If order is not in localStorage, it might be a server-only order
-    if (!order) {
-        // Try to fetch from server if not found locally
-        const isServerOrder = orderId.toString().includes('SERVER-');
-        
-        if (isServerOrder) {
-            alert('This order exists only on the server and full details may not be available.');
-            // You could implement a server fetch for individual orders here
-        } else {
-            alert('Order not found');
-            return;
-        }
-    }
     
     // Get the modal elements
     const orderModal = document.getElementById('orderModal');
@@ -624,6 +610,54 @@ function viewOrder(orderId) {
     if (!orderModal || !orderDetails) {
         console.error('Order modal elements not found');
         return;
+    }
+    
+    // If order is not in localStorage, try to fetch from server
+    if (!order) {
+        console.log('Order not found in localStorage, trying server fetch...');
+        
+        // Show loading state in modal
+        orderModal.style.display = 'block';
+        orderDetails.innerHTML = `
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>Loading order details from server...</p>
+            </div>
+        `;
+        
+        // Try to fetch from server
+        try {
+            const adminToken = sessionStorage.getItem('adminToken') || 'admin_token';
+            const response = await fetch(`/.netlify/functions/get-order?orderId=${orderId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.order) {
+                order = result.order;
+                console.log('Successfully fetched order from server:', order);
+            } else {
+                throw new Error('Order not found on server');
+            }
+        } catch (error) {
+            console.error('Error fetching order from server:', error);
+            orderDetails.innerHTML = `
+                <div class="error-message">
+                    <p>Error loading order: ${error.message}</p>
+                    <button class="close-btn" onclick="document.getElementById('orderModal').style.display='none'">Close</button>
+                </div>
+            `;
+            return;
+        }
     }
     
     // Format the order date with time
@@ -644,6 +678,7 @@ function viewOrder(orderId) {
                 <p><strong>Order ID:</strong> #ORD-${order.id}</p>
                 <p><strong>Date:</strong> ${formattedDate}</p>
                 <p><strong>Status:</strong> <span class="status-badge ${order.status || 'preordered'}">${order.status || 'Preordered'}</span></p>
+                <p><strong>Source:</strong> <span class="source-tag ${order.source || 'server'}-source">${order.source || 'Server'}</span></p>
             </div>
             <div class="customer-info">
                 <h3>Customer Information</h3>
@@ -652,6 +687,7 @@ function viewOrder(orderId) {
                 <p><strong>Phone:</strong> ${order.phone || 'Not provided'}</p>
             </div>
         </div>
+        
         <div class="order-items">
             <h3>Ordered Items</h3>
             <table class="order-items-table">
