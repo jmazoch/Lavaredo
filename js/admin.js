@@ -1129,3 +1129,137 @@ document.addEventListener = function(event, callback) {
 // Make the functions globally available
 window.clearAllServerOrders = clearAllServerOrders;
 window.addClearServerOrdersButton = addClearServerOrdersButton;
+
+// New function to synchronize local orders with the server
+async function syncLocalOrders() {
+    console.log('Synchronizing local orders with server');
+    
+    try {
+        // Get locally stored orders
+        const localOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+        
+        // Filter to find orders that haven't been server confirmed
+        const unconfirmedOrders = localOrders.filter(order => !order.serverConfirmed);
+        
+        if (unconfirmedOrders.length === 0) {
+            console.log('No local orders to sync');
+            return { success: true, synced: 0 };
+        }
+        
+        console.log(`Found ${unconfirmedOrders.length} local orders to sync`);
+        
+        // Call the sync function
+        const response = await window.apiUtils.callFunction('sync-local-orders', {
+            method: 'POST',
+            body: JSON.stringify({ orders: unconfirmedOrders })
+        });
+        
+        if (response && response.success) {
+            console.log(`Sync completed: ${response.results.successful} orders synced`);
+            
+            // Update local storage to mark orders as synced
+            if (response.results.successful > 0) {
+                const updatedLocalOrders = localOrders.map(order => {
+                    const syncResult = response.results.details.find(detail => detail.id === order.id);
+                    if (syncResult && syncResult.success) {
+                        return { ...order, serverConfirmed: true };
+                    }
+                    return order;
+                });
+                
+                localStorage.setItem('submittedOrders', JSON.stringify(updatedLocalOrders));
+                console.log('Updated local storage after successful sync');
+            }
+            
+            // Refresh orders list
+            loadAllOrders();
+            
+            return {
+                success: true,
+                synced: response.results.successful,
+                failed: response.results.failed
+            };
+        } else {
+            console.error('Sync API returned error:', response);
+            return { success: false, error: 'API returned error' };
+        }
+    } catch (error) {
+        console.error('Error synchronizing local orders:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Add functions to initialize and call functions - place this at end of file
+document.addEventListener('DOMContentLoaded', function() {
+    // Add sync button to admin interface
+    const adminActions = document.querySelector('.admin-actions');
+    if (adminActions) {
+        const syncBtn = document.createElement('button');
+        syncBtn.id = 'syncOrdersBtn';
+        syncBtn.className = 'btn-sync';
+        syncBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Sync Orders';
+        syncBtn.addEventListener('click', async function() {
+            const result = await syncLocalOrders();
+            if (result.success) {
+                showToast(`Sync completed: ${result.synced} orders synced`, 'success');
+            } else {
+                showToast(`Sync failed: ${result.error}`, 'error');
+            }
+        });
+        
+        // Insert before logout button
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+            adminActions.insertBefore(syncBtn, logoutBtn);
+        } else {
+            adminActions.appendChild(syncBtn);
+        }
+    }
+    
+    // Add CSS for the Sync button
+    const style = document.createElement('style');
+    style.textContent = `
+        .btn-sync {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #9C27B0;
+            color: white;
+        }
+        
+        .btn-sync:hover {
+            background-color: #7B1FA2;
+            opacity: 0.95;
+            transform: translateY(-2px);
+        }
+        
+        .btn-sync i {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Perform sync on load
+    setTimeout(async () => {
+        try {
+            await syncLocalOrders();
+        } catch (e) {
+            console.error('Error during initial sync:', e);
+        }
+    }, 2000);
+});
+
+// Make sync function globally available
+window.syncLocalOrders = syncLocalOrders;

@@ -1,11 +1,32 @@
 /**
- * Simple order database handler
- * In production, you would replace this with a real database like MongoDB, Firebase, etc.
+ * Order database handler with persistent storage
  */
+const persistentStore = require('./persistent-store');
 
-// In-memory orders storage (for demo purposes)
-// Note: This will reset when the function is redeployed or cold starts
-let ordersDatabase = [];
+// In-memory cache of orders (for faster access)
+let ordersCache = null;
+
+/**
+ * Get all orders, combining persistent storage with in-memory cache
+ * @returns {Array} All orders
+ */
+function getAllOrdersInternal() {
+  if (!ordersCache) {
+    // Load from persistent storage on first access
+    ordersCache = persistentStore.loadOrders();
+    console.log(`Loaded ${ordersCache.length} orders into cache from persistent storage`);
+  }
+  return ordersCache;
+}
+
+/**
+ * Save orders to both cache and persistent storage
+ * @param {Array} orders - The orders to save
+ */
+function saveOrdersInternal(orders) {
+  ordersCache = orders; // Update cache
+  return persistentStore.saveOrders(orders); // Save to persistent storage
+}
 
 /**
  * Add an order to the database
@@ -26,12 +47,26 @@ exports.saveOrder = function(order) {
     order.date = new Date().toISOString();
   }
   
-  // Add the order to our "database"
-  ordersDatabase.push(order);
-  console.log(`Order saved to database: ${order.id}`);
+  // Add source property if not set
+  if (!order.source) {
+    order.source = 'api';
+  }
+  
+  // Get existing orders
+  const orders = getAllOrdersInternal();
+  
+  // Make sure we don't add duplicate orders
+  if (!orders.some(o => o.id === order.id)) {
+    // Add the order to our database
+    orders.push(order);
+    saveOrdersInternal(orders);
+    console.log(`Order saved to database: ${order.id}`);
+  } else {
+    console.log(`Order ${order.id} already exists in database`);
+  }
   
   // Log the current number of orders for debugging
-  console.log(`Database now contains ${ordersDatabase.length} orders`);
+  console.log(`Database now contains ${orders.length} orders`);
   
   return order;
 };
@@ -41,7 +76,7 @@ exports.saveOrder = function(order) {
  * @returns {Array} All orders
  */
 exports.getAllOrders = function() {
-  return ordersDatabase;
+  return getAllOrdersInternal();
 };
 
 /**
@@ -50,7 +85,8 @@ exports.getAllOrders = function() {
  * @returns {Object|null} The order or null if not found
  */
 exports.getOrderById = function(orderId) {
-  const order = ordersDatabase.find(o => o.id === orderId);
+  const orders = getAllOrdersInternal();
+  const order = orders.find(o => o.id === orderId);
   return order || null;
 };
 
@@ -60,9 +96,15 @@ exports.getOrderById = function(orderId) {
  * @returns {Boolean} True if order was deleted, false if not found
  */
 exports.deleteOrder = function(orderId) {
-  const initialCount = ordersDatabase.length;
-  ordersDatabase = ordersDatabase.filter(o => o.id !== orderId);
-  return ordersDatabase.length < initialCount;
+  const orders = getAllOrdersInternal();
+  const initialCount = orders.length;
+  const newOrders = orders.filter(o => o.id !== orderId);
+  
+  if (newOrders.length !== initialCount) {
+    saveOrdersInternal(newOrders);
+    return true;
+  }
+  return false;
 };
 
 /**
@@ -72,9 +114,12 @@ exports.deleteOrder = function(orderId) {
  * @returns {Object|null} The updated order or null if not found
  */
 exports.updateOrderStatus = function(orderId, status) {
-  const order = ordersDatabase.find(o => o.id === orderId);
+  const orders = getAllOrdersInternal();
+  const order = orders.find(o => o.id === orderId);
+  
   if (order) {
     order.status = status;
+    saveOrdersInternal(orders);
     return order;
   }
   return null;
@@ -84,7 +129,7 @@ exports.updateOrderStatus = function(orderId, status) {
  * Reset the database (for testing)
  */
 exports.resetDatabase = function() {
-  ordersDatabase = [];
+  saveOrdersInternal([]);
   return { success: true, message: 'Database reset' };
 };
 
@@ -92,10 +137,12 @@ exports.resetDatabase = function() {
  * Get database stats
  */
 exports.getStats = function() {
+  const orders = getAllOrdersInternal();
   return {
-    totalOrders: ordersDatabase.length,
-    statuses: ordersDatabase.reduce((acc, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1;
+    totalOrders: orders.length,
+    statuses: orders.reduce((acc, order) => {
+      const status = order.status || 'unknown';
+      acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {})
   };
