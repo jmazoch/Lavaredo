@@ -150,6 +150,7 @@
         <div class="debug-controls">
             <button id="testApiBtn" class="debug-btn primary">Test API Connection</button>
             <button id="showLocalBtn" class="debug-btn success">Show localStorage Messages</button>
+            <button id="debugStorageBtn" class="debug-btn warning">Debug Storage</button>
             <button id="addFakeBtn" class="debug-btn warning">Add Test Message</button>
             <button id="clearLogsBtn" class="debug-btn danger">Clear Logs</button>
         </div>
@@ -175,6 +176,7 @@
         const showLocalBtn = document.getElementById('showLocalBtn');
         const addFakeBtn = document.getElementById('addFakeBtn');
         const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const debugStorageBtn = document.getElementById('debugStorageBtn');
         
         // Store messages
         let messages = [];
@@ -235,30 +237,46 @@
                     throw new Error(`Invalid JSON response: ${parseError.message}`);
                 }
                 
-                const newMessages = data.orders || [];
+                // Get server orders
+                const serverOrders = data.orders || [];
                 
-                // Remove the "no messages" text if we have messages
-                if (newMessages.length > 0 && messageList.querySelector('.empty-state')) {
-                    messageList.innerHTML = '';
-                    log(`Found ${newMessages.length} messages from server`);
-                } else if (newMessages.length === 0) {
-                    log('No messages returned from server');
+                // Also get localStorage orders
+                const localOrders = JSON.parse(localStorage.getItem('testMessages') || '[]');
+                log(`Found ${localOrders.length} messages in localStorage`);
+                
+                // Combine both sources (giving priority to server orders in case of duplicates)
+                const allMessages = [...serverOrders];
+                
+                // Add local orders that aren't already in the server data
+                localOrders.forEach(localOrder => {
+                    if (!allMessages.some(serverOrder => serverOrder.id === localOrder.id)) {
+                        allMessages.push(localOrder);
+                    }
+                });
+                
+                // Update message list with all messages
+                messages = allMessages;
+                log(`Combined ${serverOrders.length} server messages with ${localOrders.length} local messages. Total: ${messages.length}`);
+                
+                if (messages.length > 0) {
+                    displayMessages(messages);
+                    log(`Displaying ${messages.length} total messages`);
+                } else {
+                    log('No messages to display from either source');
+                    messageList.innerHTML = '<div class="empty-state">No messages yet. Send one from the Test Card!</div>';
                 }
-                
-                // Find new messages
-                const oldMessageIds = new Set(messages.map(m => m.id));
-                
-                // Update message list with new messages
-                messages = newMessages;
-                displayMessages(newMessages, oldMessageIds);
                 
                 // Visual feedback that refresh is complete
                 setTimeout(() => {
                     refreshStatus.classList.remove('active');
                 }, 500);
+                
             } catch (error) {
                 log(`Error fetching messages: ${error.message}`, true);
-                messageList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                
+                // On error, fall back to localStorage messages
+                log('Falling back to localStorage messages');
+                showLocalStorageMessages();
             }
         }
         
@@ -291,6 +309,7 @@
                     <div>ID: ${message.id}</div>
                     <div>Time: ${time} ${deviceInfo}</div>
                 `;
+                
                 messageList.appendChild(messageElement);
             });
         }
@@ -374,6 +393,44 @@
                 log(`Error saving fake message to localStorage: ${error.message}`, true);
             }
         }
+        
+        // Add debug storage button handler
+        debugStorageBtn.addEventListener('click', async function() {
+            try {
+                log('Checking storage system...');
+                
+                // Generate admin token
+                const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                
+                // Call debug storage endpoint
+                const response = await fetch('/.netlify/functions/debug-storage', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                log(`Storage location: ${data.storage.storageLocation}`);
+                log(`Storage writable: ${data.storage.writable}`);
+                log(`Total orders in database: ${data.orders.count}`);
+                log(`In-memory orders: ${data.storage.inMemoryOrderCount}`);
+                
+                if (data.orders.count > 0) {
+                    log(`Latest order ID: ${data.orders.latest.id}`);
+                }
+                
+                // If we have server orders but they're not showing in dashboard, 
+                // try to display them now
+                if (data.orders.count > 0 && messages.length === 0) {
+                    log('Found orders on server that aren\'t showing in dashboard. Fetching...');
+                    await fetchMessages();
+                }
+            } catch (error) {
+                log(`Storage debug error: ${error.message}`, true);
+            }
+        });
         
         // Event listeners
         refreshBtn.addEventListener('click', fetchMessages);

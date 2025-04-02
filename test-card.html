@@ -109,6 +109,9 @@
                 <button id="testServerBtn" style="background-color: #34a853; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Test Server
                 </button>
+                <button id="debugStorageBtn" style="background-color: #fbbc05; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Debug Storage
+                </button>
                 <button id="clearLogBtn" style="background-color: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Clear Log
                 </button>
@@ -153,6 +156,50 @@
                 responseInfo.textContent = `Server test: ${response.ok ? 'SUCCESS' : 'FAILED'}\n\nStatus: ${response.status} ${response.statusText}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
             } catch (error) {
                 responseInfo.textContent = `Server test error: ${error.message}\n\nThis indicates there may be a server connection problem or CORS issue.`;
+            }
+        });
+        
+        // Add new debug storage button handler
+        const debugStorageBtn = document.getElementById('debugStorageBtn');
+        debugStorageBtn.addEventListener('click', async function() {
+            try {
+                responseInfo.textContent = 'Checking storage system...';
+                
+                // Generate admin token
+                const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                
+                // Call debug storage endpoint
+                const response = await fetch('/.netlify/functions/debug-storage', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                const formattedOutput = `Storage System Status:
+                
+Storage Location: ${data.storage.storageLocation}
+Writable: ${data.storage.writable}
+File Exists: ${data.storage.fileExists !== undefined ? data.storage.fileExists : 'N/A'}
+File Size: ${data.storage.fileSize !== undefined ? data.storage.fileSize + ' bytes' : 'N/A'}
+In-Memory Orders: ${data.storage.inMemoryOrderCount}
+
+Environment:
+- Node: ${data.environment.nodeVersion}
+- Platform: ${data.environment.platform}
+- Temp Dir: ${data.environment.tempDir}
+
+Orders Status:
+- Total Orders: ${data.orders.count}
+- Test Save Successful: ${data.testSave.saved}
+
+${data.orders.count > 0 ? `Latest Order: ${JSON.stringify(data.orders.latest, null, 2)}` : 'No orders found'}`;
+
+                responseInfo.textContent = formattedOutput;
+            } catch (error) {
+                responseInfo.textContent = `Storage debug error: ${error.message}`;
             }
         });
         
