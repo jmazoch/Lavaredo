@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             id: 3,
             name: 'Limited Jersey',
             czechName: 'Krátký dres Limited Edition',
-            description: 'Limitovaná edice cream white. Unikátní design, vyšší kvalita materiálu. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
+            description: 'Limitovaná edice. Unikátní design. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
             image: 'gallery/jersey3.webp',
             category: 'jersey',
             price: '1299 Kč'
@@ -58,8 +58,8 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 7,
             name: 'Classic black Bib Shorts',
-            czechName: 'Kraťasy (bibs) Classic',
-            description: 'Klasické černé kratasy s gumou, upravené designem se světlými reflexními nápisy. Osvědčený model z předchozí sezóny s italskou/belgickou vložkou.',
+            czechName: 'Classic black Bib Shorts',
+            description: 'Klasické černé kratasy s gumou, upravené designem se světlými reflexními prvky. Osvědčený model z předchozí sezóny, s italskou vložkou.',
             image: 'gallery/bib1.webp',
             category: 'bibs',
             price: '1399 Kč'
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 8,
             name: 'Classic dark blue Bib Shorts',
-            czechName: 'Kraťasy (bibs) Classic',
+            czechName: 'Classic dark blue Bib Shorts',
             description: 'Tmavě modrá varianta kratasů s reflexními prvky a kvalitní italskou vložkou. Designově podobné černé variantě, ale v nové barevné kombinaci.',
             image: 'gallery/bib2.webp',
             category: 'bibs',
@@ -75,9 +75,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         {
             id: 9,
-            name: 'Olive green Bib Shorts without rubber bands',
-            czechName: 'Kraťasy (bibs) bez gumy',
-            description: 'Mocha barva kratasů bez koncové gumy (without paperband). Premium materiál testovaný minulou sezónu s jemnými reflexními detaily (dvě téměř neviditelné čárky vzadu). Lehce kompresní efekt podobný S-lab Salamon.',
+            name: 'Mocha Bib Shorts without rubber bands',
+            czechName: 'Mocha Bib Shorts bez lemu',
+            description: 'Mocha barva kratasů, které nemají na konci nohavic klasický lem s gumou, zakončení je hladké a plynule přechází do látky – tzv. „do ztracena“. Premium materiál testovaný minulou sezónu s jemnými reflexními detaily. Lehce kompresní efekt podobný S-lab Salamon.',
             image: 'gallery/bib3.webp',
             category: 'bibs',
             price: '1499 Kč'
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             id: 10,
             name: 'Antartica grey Vest',
             czechName: 'Vesta',
-            description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná, s možností výběru mezi verzí s jedním nebo dvěma zipy. Osvědčený model z předchozí sezóny.',
+            description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná. Osvědčený model z předchozí sezóny.',
             image: 'gallery/vest1.webp',
             category: 'vests',
             price: '1199 Kč'
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             id: 11,
             name: 'Black Vest',
             czechName: 'Vesta',
-            description: 'Černá vesta s reflexními prvky, dostupná ve dvou verzích zipu. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
+            description: 'Černá vesta s reflexními prvky. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
             image: 'gallery/vest2.webp',
             category: 'vests',
             price: '1199 Kč'
