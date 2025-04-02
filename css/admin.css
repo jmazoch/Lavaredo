@@ -1,0 +1,954 @@
+/* Admin Dashboard Styles */
+.admin-main {
+    padding: 60px 0;
+    min-height: 70vh;
+}
+
+.admin-main h1 {
+    margin-bottom: 40px;
+    font-weight: 500;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 30px;
+}
+
+.admin-sidebar {
+    background-color: #333;
+    border-radius: 10px;
+    padding: 20px 0;
+}
+
+.admin-menu {
+    list-style: none;
+}
+
+.admin-menu li {
+    margin-bottom: 5px;
+}
+
+.admin-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: #fff;
+    transition: all 0.2s;
+}
+
+.admin-menu a:hover {
+    background-color: #444;
+}
+
+.admin-menu li.active a {
+    background-color: #ff4136;
+    color: white;
+}
+
+.admin-content {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.admin-content-full {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-section {
+    display: none;
+    padding: 0;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-header {
+    padding: 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header h2 {
+    font-weight: 500;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-refresh, 
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-refresh {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-logout {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-refresh:hover,
+.btn-logout:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 250px;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.btn-add {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-add:hover {
+    background-color: #3e9042;
+}
+
+/* Tables */
+.orders-table-container,
+.customers-table-container {
+    overflow-x: auto;
+}
+
+.orders-table,
+.customers-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td,
+.customers-table th,
+.customers-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.orders-table th,
+.customers-table th {
+    background-color: #f8f8f8;
+    font-weight: 500;
+}
+
+.orders-table tr:hover,
+.customers-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Improved date-time display */
+.orders-table td:nth-child(3) {
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+.orders-table td.order-datetime {
+    white-space: nowrap;
+    min-width: 200px;
+    font-size: 0.95rem;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-badge.pending,
+.status-badge.preordered {
+    background-color: #ffecb3;
+    color: #ff8f00;
+}
+
+.status-badge.processing,
+.status-badge.added {
+    background-color: #b3e5fc;
+    color: #0277bd;
+}
+
+.status-badge.completed,
+.status-badge.paid {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+}
+
+/* Status options styling */
+.status-options {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.btn-status {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-status:hover {
+    background-color: #eee;
+}
+
+.btn-status.active {
+    border-color: #333;
+    background-color: #333;
+    color: white;
+}
+
+/* Modal status buttons */
+.modal-status-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.order-status-options h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.modal-status-buttons .btn-status {
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+
+.order-actions {
+    margin-top: 30px;
+}
+
+/* Action buttons */
+.btn-view,
+.btn-edit,
+.btn-delete {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px;
+    margin-right: 5px;
+}
+
+.btn-view {
+    color: #2196f3;
+}
+
+.btn-edit {
+    color: #ff9800;
+}
+
+/* Enhanced delete button styling */
+.btn-delete {
+    color: #f44336;
+    margin-left: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.btn-delete:hover {
+    color: #d32f2f;
+    transform: scale(1.1);
+}
+
+.btn-delete::after {
+    content: 'Delete';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.btn-delete:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Bulk delete button styling */
+.btn-delete-bulk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #d32f2f;
+    color: white;
+}
+
+.btn-delete-bulk:hover {
+    background-color: #b71c1c;
+    opacity: 0.95;
+    transform: translateY(-2px);
+}
+
+/* Products grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.product-card {
+    background-color: white;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.product-card-image {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.product-card-info {
+    padding: 15px;
+}
+
+.product-card-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.product-card-category {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.product-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 50px auto;
+    padding: 30px;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #777;
+}
+
+/* Close icon in header */
+.close-icon {
+    margin-left: 15px;
+}
+
+.close-icon a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-icon a:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.close-icon i {
+    font-size: 18px;
+}
+
+/* Prominent top-right close button */
+.top-right-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 100;
+}
+
+.top-right-close a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.top-right-close a:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    transform: rotate(90deg);
+}
+
+.top-right-close i {
+    font-size: 22px;
+    color: #333;
+}
+
+/* Order detail modal styling */
+.order-detail-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.order-info, .customer-info {
+    flex: 1;
+}
+
+.order-info strong, .customer-info strong {
+    font-weight: 500;
+    display: inline-block;
+    width: 80px;
+}
+
+.order-info p {
+    margin-bottom: 8px;
+}
+
+.customer-info h3, .order-items h3 {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.order-items-grid {
+    display: none;
+}
+
+.order-item-image {
+    display: none;
+}
+
+.order-item {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+}
+
+.order-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.order-item-details h4 {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.order-item-details p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.order-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-process, .btn-complete {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-process {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-complete {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-process:hover, .btn-complete:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Order items table styling */
+.order-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.order-items-table th,
+.order-items-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.order-items-table th {
+    background-color: #f8f8f8;
+    font-weight: 500;
+    color: #444;
+}
+
+.order-items-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 250px;
+    max-width: 450px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast-content i {
+    font-size: 1.2rem;
+}
+
+.toast-close {
+    margin-left: 15px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-success {
+    background-color: #4caf50;
+}
+
+.toast-error {
+    background-color: #f44336;
+}
+
+.toast-info {
+    background-color: #2196f3;
+}
+
+/* Loading overlay for order submission */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+.loading-overlay p {
+    color: white;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced delete confirmation modal */
+.delete-confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.delete-confirm-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.delete-confirm-modal.show .confirm-dialog {
+    transform: translateY(0);
+}
+
+.confirm-dialog h3 {
+    margin-bottom: 20px;
+    color: #d32f2f;
+}
+
+.confirm-dialog p {
+    margin-bottom: 25px;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.confirm-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+.confirm-btn:hover {
+    background-color: #d32f2f;
+}
+
+.cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+}
+
+.cancel-btn:hover {
+    background-color: #d5d5d5;
+}
+
+/* Source tag styling */
+.source-tag {
+    display: inline-block;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    color: #333;
+    margin-left: 5px;
+}
+
+.server-source {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.local-source {
+    background-color: #888;
+    color: white;
+}
+
+/* Loading indicator in modal */
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.loading-indicator .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #4a90e2;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loading-indicator p {
+    color: #666;
+}
+
+/* Error message in modal */
+.error-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.error-message .close-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.error-message .close-btn:hover {
+    background-color: #555;
+}
+
+/* Diagnostic info styling */
+.diagnostic-info {
+    background-color: #f8f8f8;
+    border-left: 4px solid #2196f3;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.diagnostic-info ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.diagnostic-info li {
+    margin-bottom: 5px;
+}
+
+.endpoint-info {
+    font-size: 0.85rem;
+    margin-top: 10px;
+    color: #666;
+    font-family: monospace;
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .section-actions {
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+}
+
+/* Database Management Controls */
+.admin-data-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    align-items: center;
+    border: 1px solid #eee;
+}
+
+.btn-generate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-generate:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: #f44336;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.database-stats {
+    margin-left: auto;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+}
+
+.status-breakdown {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+}

@@ -1,0 +1,200 @@
+/* Account Page Styles */
+.account-header {
+    background-color: #333;
+    color: white;
+    height: auto;
+    padding: 20px 0;
+}
+
+.account-header .nav-links a {
+    color: white;
+}
+
+.account-main {
+    padding: 60px 0;
+    min-height: 70vh;
+}
+
+.account-main h1 {
+    margin-bottom: 40px;
+    font-weight: 500;
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 40px;
+}
+
+.account-sidebar {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.account-profile {
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.account-avatar {
+    font-size: 4rem;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.account-profile h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.account-menu {
+    list-style: none;
+}
+
+.account-menu li {
+    margin-bottom: 10px;
+}
+
+.account-menu a {
+    display: block;
+    padding: 10px 15px;
+    border-radius: 5px;
+    color: #333;
+    transition: all 0.2s;
+}
+
+.account-menu a:hover {
+    background-color: #eee;
+}
+
+.account-menu li.active a {
+    background-color: #333;
+    color: white;
+}
+
+.account-content {
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+}
+
+.account-section {
+    display: none;
+}
+
+.account-section.active {
+    display: block;
+}
+
+.account-section h3 {
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.orders-list {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.order-item {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.order-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.order-status {
+    font-weight: 500;
+    color: #4caf50;
+}
+
+.order-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.order-product {
+    display: flex;
+    align-items: center;
+}
+
+.order-product-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+.order-product-name {
+    font-weight: 500;
+}
+
+.order-product-size {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.profile-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #555;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .account-sidebar {
+        margin-bottom: 20px;
+    }
+}

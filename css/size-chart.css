@@ -1,0 +1,123 @@
+.size-chart-modal {
+    display: none;
+    position: fixed;
+    z-index: 1100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.size-chart-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 900px;
+    position: relative;
+    animation: modalFadeIn 0.3s;
+}
+
+.close-size-chart {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: #333;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-size-chart:hover {
+    color: #000;
+}
+
+.size-chart-header {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.size-chart-header h2 {
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+.size-chart-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-button {
+    padding: 12px 20px;
+    background-color: #f5f5f5;
+    border: none;
+    margin: 0 5px;
+    cursor: pointer;
+    font-weight: 500;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+    background-color: #e5e5e5;
+}
+
+.tab-button.active {
+    background-color: #333;
+    color: white;
+}
+
+.size-chart-table-container {
+    overflow-x: auto;
+}
+
+.size-chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.size-chart-table th, .size-chart-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.size-chart-table th {
+    background-color: #f2f2f2;
+}
+
+.size-chart-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.size-chart-footnote {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .size-chart-content {
+        width: 95%;
+        padding: 20px 15px;
+        margin: 10% auto;
+    }
+    
+    .tab-button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .size-chart-table th, .size-chart-table td {
+        padding: 8px 6px;
+        font-size: 0.9rem;
+    }
+}
