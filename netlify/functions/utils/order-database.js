@@ -7,6 +7,14 @@ const persistentStore = require('./persistent-store');
 let ordersCache = null;
 
 /**
+ * Reset the cache to force a fresh load from persistent storage
+ */
+exports.resetCache = function() {
+  console.log('Resetting order cache - next access will load from persistent storage');
+  ordersCache = null;
+};
+
+/**
  * Get all orders, combining persistent storage with in-memory cache
  * @returns {Array} All orders
  */
@@ -59,8 +67,8 @@ exports.saveOrder = function(order) {
   if (!orders.some(o => o.id === order.id)) {
     // Add the order to our database
     orders.push(order);
-    saveOrdersInternal(orders);
-    console.log(`Order saved to database: ${order.id}`);
+    const saveResult = saveOrdersInternal(orders);
+    console.log(`Order saved to database: ${order.id}, save result: ${saveResult}`);
   } else {
     console.log(`Order ${order.id} already exists in database`);
   }

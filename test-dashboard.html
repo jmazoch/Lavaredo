@@ -151,6 +151,7 @@
             <button id="testApiBtn" class="debug-btn primary">Test API Connection</button>
             <button id="showLocalBtn" class="debug-btn success">Show localStorage Messages</button>
             <button id="debugStorageBtn" class="debug-btn warning">Debug Storage</button>
+            <button id="checkStorageBtn" class="debug-btn warning">Check Storage Paths</button>
             <button id="addFakeBtn" class="debug-btn warning">Add Test Message</button>
             <button id="clearLogsBtn" class="debug-btn danger">Clear Logs</button>
         </div>
@@ -177,6 +178,7 @@
         const addFakeBtn = document.getElementById('addFakeBtn');
         const clearLogsBtn = document.getElementById('clearLogsBtn');
         const debugStorageBtn = document.getElementById('debugStorageBtn');
+        const checkStorageBtn = document.getElementById('checkStorageBtn');
         
         // Store messages
         let messages = [];
@@ -432,6 +434,51 @@
             }
         });
         
+        // Add check storage button
+        checkStorageBtn.addEventListener('click', async function() {
+            try {
+                log('Checking storage paths...');
+                
+                // Generate admin token
+                const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                
+                // Call the check-storage endpoint
+                const response = await fetch('/.netlify/functions/check-storage', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                log(`Storage paths check complete.`);
+                
+                // Check if orders.json was found anywhere
+                let ordersFound = false;
+                Object.keys(data.storagePaths).forEach(path => {
+                    const pathInfo = data.storagePaths[path];
+                    if (pathInfo.ordersFile && pathInfo.ordersFile.exists) {
+                        ordersFound = true;
+                        log(`Found orders.json in: ${path}`);
+                        log(`  Size: ${pathInfo.ordersFile.size} bytes`);
+                        log(`  Last modified: ${new Date(pathInfo.ordersFile.modified).toLocaleString()}`);
+                        log(`  Orders count: ${pathInfo.ordersFile.ordersCount}`);
+                    }
+                });
+                
+                if (!ordersFound) {
+                    log(`No orders.json file found in any storage location.`, true);
+                    log(`This may indicate that orders are not being saved to disk.`);
+                }
+                
+                // Log where the function is running from
+                log(`Function running in: ${data.environment.cwd}`);
+                log(`Node version: ${data.environment.nodeVersion}`);
+            } catch (error) {
+                log(`Storage paths check failed: ${error.message}`, true);
+            }
+        });
+
         // Event listeners
         refreshBtn.addEventListener('click', fetchMessages);
         

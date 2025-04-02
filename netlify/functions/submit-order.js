@@ -36,11 +36,13 @@ exports.handler = async function(event, context) {
       customer: data.customer,
       email: data.email,
       phone: data.phone || '',
+      text: data.text || '', // Add text field explicitly for test messages
       date: new Date().toISOString(),
       timestamp: Date.now(),
       items: data.items,
       status: 'preordered',
       source: 'website',
+      deviceId: data.deviceId || 'unknown',
       sourceInfo: {
         ip: event.headers['client-ip'] || 'unknown',
         userAgent: event.headers['user-agent'] || 'unknown',
@@ -51,8 +53,13 @@ exports.handler = async function(event, context) {
     
     // Save the order to our database with improved error handling
     try {
+      console.log('Attempting to save order to database:', orderData.id);
       const savedOrder = orderDb.saveOrder(orderData);
       console.log(`New order saved: #${savedOrder.id} by ${savedOrder.customer}`);
+      
+      // Store orders count in console for debugging
+      const allOrders = orderDb.getAllOrders();
+      console.log(`Current orders in database: ${allOrders.length}`);
       
       return corsHelpers.createResponse(200, { 
         success: true,

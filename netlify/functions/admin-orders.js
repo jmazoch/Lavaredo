@@ -26,12 +26,24 @@ exports.handler = async function(event, context) {
   }
   
   try {
+    console.log('Loading orders from database...');
+    
+    // Force a fresh load from persistent storage
+    orderDb.resetCache && orderDb.resetCache();
+    
     // Get all orders from the database
     const orders = orderDb.getAllOrders();
-    console.log(`Returning ${orders.length} orders from database`);
+    console.log(`Found ${orders.length} orders in database`);
+    
+    // Log some basic info about the orders for debugging
+    if (orders.length > 0) {
+      orders.forEach((order, index) => {
+        console.log(`Order ${index+1}: ID=${order.id}, Customer=${order.customer}, Source=${order.source || 'unknown'}`);
+      });
+    }
     
     // Get database statistics
-    const stats = orderDb.getStats();
+    const stats = orderDb.getStats ? orderDb.getStats() : { totalOrders: orders.length };
     
     // Get the current timestamp
     const currentTime = new Date().toISOString();
@@ -41,7 +53,12 @@ exports.handler = async function(event, context) {
       message: "Orders retrieved successfully",
       timestamp: currentTime,
       stats: stats,
-      orders: orders
+      orders: orders,
+      debug: {
+        functionPath: __dirname,
+        isArray: Array.isArray(orders),
+        ordersSample: orders.length > 0 ? JSON.stringify(orders[0]).substring(0, 100) + '...' : 'No orders'
+      }
     };
     
     return corsHelpers.createResponse(200, response);
@@ -49,7 +66,8 @@ exports.handler = async function(event, context) {
     console.error("Error retrieving orders:", error);
     return corsHelpers.createResponse(500, { 
       error: "Failed to retrieve orders", 
-      details: error.message 
+      details: error.message,
+      stack: error.stack
     });
   }
 };

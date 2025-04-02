@@ -112,6 +112,9 @@
                 <button id="debugStorageBtn" style="background-color: #fbbc05; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Debug Storage
                 </button>
+                <button id="checkMessagesBtn" style="background-color: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Check Messages
+                </button>
                 <button id="clearLogBtn" style="background-color: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Clear Log
                 </button>
@@ -203,6 +206,58 @@ ${data.orders.count > 0 ? `Latest Order: ${JSON.stringify(data.orders.latest, nu
             }
         });
         
+        // Add new check messages button handler
+        const checkMessagesBtn = document.getElementById('checkMessagesBtn');
+        checkMessagesBtn.addEventListener('click', async function() {
+            try {
+                responseInfo.textContent = 'Checking messages on the server...';
+                
+                // Generate admin token
+                const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                
+                // Call admin-orders endpoint to check what's there
+                const response = await fetch('/.netlify/functions/admin-orders', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Format the response nicely
+                const totalMessages = data.orders ? data.orders.length : 0;
+                let formattedOutput = `Server has ${totalMessages} messages\n\n`;
+                
+                if (totalMessages > 0) {
+                    // Show last 3 messages
+                    const recentMessages = data.orders.slice(0, 3);
+                    formattedOutput += 'Recent messages:\n\n';
+                    
+                    recentMessages.forEach((msg, idx) => {
+                        formattedOutput += `[${idx+1}] ID: ${msg.id}\n`;
+                        formattedOutput += `    Customer: ${msg.customer}\n`;
+                        formattedOutput += `    Text: ${msg.text || '(none)'}\n`;
+                        formattedOutput += `    Time: ${new Date(msg.timestamp).toLocaleString()}\n\n`;
+                    });
+                } else {
+                    formattedOutput += 'No messages found on server.\n';
+                    formattedOutput += 'Possible issues:\n';
+                    formattedOutput += '1. Messages are not being saved correctly\n';
+                    formattedOutput += '2. The admin-orders function cannot access the storage\n';
+                    formattedOutput += '3. The authentication token is not being accepted\n';
+                }
+                
+                // Also show localStorage messages count for comparison
+                const localMessages = JSON.parse(localStorage.getItem('testMessages') || '[]');
+                formattedOutput += `\nLocalStorage has ${localMessages.length} messages`;
+                
+                responseInfo.textContent = formattedOutput;
+            } catch (error) {
+                responseInfo.textContent = `Error checking messages: ${error.message}`;
+            }
+        });
+        
         // Generate a simple device ID and display it
         const deviceId = localStorage.getItem('testDeviceId') || 
                          `DEVICE-${Math.floor(Math.random() * 1000)}`;
@@ -273,6 +328,9 @@ ${data.orders.count > 0 ? `Latest Order: ${JSON.stringify(data.orders.latest, nu
                     savedMessages.push({...message, serverResponse: result});
                     localStorage.setItem('testMessages', JSON.stringify(savedMessages));
                     console.log('Message saved to localStorage for testing');
+                    
+                    // Suggest checking messages after successful send
+                    responseInfo.textContent += '\n\nMessage saved successfully. Click "Check Messages" to verify if it was saved on the server.';
                 } else {
                     statusElement.textContent = `Error: ${result.error || 'Failed to send message'}`;
                     statusElement.className = "status error";
