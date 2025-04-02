@@ -88,12 +88,21 @@
             statusElement.style.display = "block";
             
             try {
-                // Create a simple message with timestamp
+                // Create a properly formatted order object with required fields
                 const message = {
                     id: `MSG-${Date.now()}`,
                     text: "Hello World",
+                    customer: "Test User",      // Required field
+                    email: "test@example.com",  // Required field
+                    phone: "+1234567890",
                     deviceId: deviceId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    // Required field - must be an array
+                    items: [{
+                        name: "Hello World Message",
+                        gender: "Unisex",
+                        size: "One Size"
+                    }]
                 };
                 
                 // Send to the server
