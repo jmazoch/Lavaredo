@@ -81,9 +81,13 @@ class DashboardController {
         }
         
         try {
+            // Get API URL from localStorage if available (allows user to configure)
+            const savedApiUrl = localStorage.getItem('googleSheetsApiUrl');
+            const apiUrl = savedApiUrl || CONFIG.API_URL;
+            
             // Try to fetch data from Google Sheets via Apps Script
-            console.log('Fetching orders from API:', CONFIG.API_URL + '?action=getOrders');
-            const response = await fetch(CONFIG.API_URL + '?action=getOrders');
+            console.log('Fetching orders from API:', apiUrl + '?action=getOrders');
+            const response = await fetch(apiUrl + '?action=getOrders');
             
             if (!response.ok) {
                 console.error(`API error: ${response.status} ${response.statusText}`);
@@ -101,6 +105,11 @@ class DashboardController {
             } catch (e) {
                 console.error('JSON parse error:', e);
                 throw new Error('Invalid JSON from API');
+            }
+            
+            // Check for unauthorized error - special handling for this case
+            if (data.error === "Unauthorized access") {
+                throw new Error('Unauthorized access to Google Sheets API. Please verify your deployment settings.');
             }
             
             console.log('Parsed API response:', data);
@@ -138,6 +147,36 @@ class DashboardController {
             
         } catch (error) {
             console.error('Error loading data:', error);
+            
+            // Special handling for unauthorized errors
+            if (error.message.includes('Unauthorized access')) {
+                this.showError(`${error.message} <br><br>
+                    <div style="text-align: left; background: #f8f8f8; padding: 10px; border-radius: 4px;">
+                        <strong>How to fix:</strong><br>
+                        1. Visit the <a href="test-sheets-api.html" target="_blank">API test page</a> to set up your Google Apps Script<br>
+                        2. Make sure your script is deployed with "Anyone" access<br>
+                        3. Check the deployment URL is correct
+                    </div>`);
+                
+                // Show setup instructions
+                this.ordersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div style="padding: 20px;">
+                                <h5>Google Sheets API Setup Required</h5>
+                                <p>You need to properly set up the Google Apps Script to access your orders.</p>
+                                <a href="test-sheets-api.html" class="btn btn-primary" target="_blank">
+                                    Setup API Connection
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+                document.getElementById('summarySpinner').style.display = 'none';
+                this.summaryContainer.innerHTML = '';
+                return;
+            }
             
             // Try fallback method if available
             try {
@@ -718,7 +757,7 @@ class DashboardController {
     
     // Display error message
     showError(message) {
-        this.errorMessageElement.textContent = message;
+        this.errorMessageElement.innerHTML = message;
         this.errorMessageElement.style.display = 'block';
     }
     
