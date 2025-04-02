@@ -1,23 +1,25 @@
 const corsHelpers = require('./utils/cors-headers');
-const orderDb = require('./utils/order-database');
-const fs = require('fs');
-const path = require('path');
+
+// Konfigurační proměnné
+const CONFIG = {
+  // Toto URL později získáte po publikování Google Apps Scriptu
+  API_URL: process.env.GOOGLE_SHEETS_API_URL || 'https://script.google.com/macros/s/AKfycbzM_OOO2LIYgLl9RqdRJFVsayk1-h0uH-zKFDIn2tj92ODWCSXsOvxy9GdKDyldOaTM/exec',
+  // Volitelný admin API klíč pro zabezpečení
+  ADMIN_API_KEY: process.env.GOOGLE_SHEETS_ADMIN_KEY || 'your-admin-key-here'
+};
 
 exports.handler = async function(event, context) {
-  console.log('Admin-orders function called with method:', event.httpMethod);
-  console.log('Headers:', JSON.stringify(event.headers).substring(0, 200));
-  
-  // Handle OPTIONS requests
+  // Obsluha OPTIONS požadavků pro CORS
   if (event.httpMethod === 'OPTIONS') {
     return corsHelpers.handleOptions();
   }
   
-  // Only allow GET requests
+  // Pouze GET požadavky jsou povoleny
   if (event.httpMethod !== "GET") {
     return corsHelpers.createResponse(405, { error: "Method Not Allowed" });
   }
   
-  // Accept any Bearer token for now
+  // Kontrola autorizačního tokenu
   const authHeader = event.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     console.log('Missing or invalid Authorization header');
@@ -27,69 +29,50 @@ exports.handler = async function(event, context) {
     });
   }
   
+  console.log('Admin-orders function called');
+  
+  // V této verzi zatím pouze vrací prázdné pole objednávek
+  // Později bude implementováno načítání z Google Sheets
+  return corsHelpers.createResponse(200, {
+    message: "Orders retrieved successfully",
+    timestamp: new Date().toISOString(),
+    orders: [],
+    info: "Načítání dat z Google Sheets bude implementováno později"
+  });
+  
+  /* 
+  // Kód pro budoucí implementaci načítání z Google Sheets:
+  
   try {
-    console.log('Loading orders from database...');
+    // Sestavení URL pro získání objednávek z Google Sheets
+    const apiUrl = new URL(CONFIG.API_URL);
+    apiUrl.searchParams.append('action', 'getOrders');
     
-    // Direct check of the file system for debugging
-    const tmpPaths = ['/tmp', './.netlify/tmp', './.netlify/data'];
-    
-    for (const tmpPath of tmpPaths) {
-      try {
-        const ordersPath = path.join(tmpPath, 'orders.json');
-        if (fs.existsSync(ordersPath)) {
-          console.log(`Found orders.json at ${ordersPath}`);
-          try {
-            const rawData = fs.readFileSync(ordersPath, 'utf8');
-            const fileOrders = JSON.parse(rawData);
-            console.log(`File contains ${fileOrders.length} orders`);
-          } catch (readError) {
-            console.error(`Error reading file: ${readError.message}`);
-          }
-        } else {
-          console.log(`No orders.json found at ${tmpPath}`);
-        }
-      } catch (e) {
-        console.log(`Error checking ${tmpPath}: ${e.message}`);
+    // Odeslání požadavku na Google Sheets
+    const response = await fetch(apiUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${CONFIG.ADMIN_API_KEY}`
       }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Google Sheets API responded with status ${response.status}`);
     }
     
-    // Force reload from storage
-    if (orderDb.resetCache) {
-      console.log('Resetting cache to force reload from storage');
-      orderDb.resetCache();
-    }
+    const data = await response.json();
     
-    // Get all orders from the database
-    const orders = orderDb.getAllOrders();
-    console.log(`Retrieved ${orders.length} orders from database`);
-    
-    // Get database statistics
-    const stats = orderDb.getStats ? orderDb.getStats() : { totalOrders: orders.length, statuses: {} };
-    
-    // Get the current timestamp
-    const currentTime = new Date().toISOString();
-    
-    // Create the response with orders and stats
-    const response = {
+    return corsHelpers.createResponse(200, {
       message: "Orders retrieved successfully",
-      timestamp: currentTime,
-      stats: stats,
-      orders: orders,
-      debug: {
-        functionPath: __dirname,
-        cwd: process.cwd(),
-        isArray: Array.isArray(orders),
-        ordersSample: orders.length > 0 ? JSON.stringify(orders[0]).substring(0, 100) + '...' : 'No orders'
-      }
-    };
-    
-    return corsHelpers.createResponse(200, response);
+      timestamp: new Date().toISOString(),
+      orders: data.orders || []
+    });
   } catch (error) {
     console.error("Error retrieving orders:", error);
     return corsHelpers.createResponse(500, { 
       error: "Failed to retrieve orders", 
-      details: error.message,
-      stack: error.stack
+      details: error.message
     });
   }
+  */
 };
