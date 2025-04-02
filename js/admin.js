@@ -2,7 +2,7 @@
 console.log('Admin.js loaded');
 
 /**
- * Admin functionality
+ * Admin functionality for order management
  */
 
 console.log('Admin.js loaded');
@@ -81,7 +81,7 @@ function setupAdminEventListeners() {
     if (refreshOrdersBtn) {
         refreshOrdersBtn.addEventListener('click', function() {
             loadAllOrders();
-            alert('Orders refreshed');
+            showToast('Orders refreshed', 'success');
         });
     }
     
@@ -159,9 +159,9 @@ function filterOrdersByStatus(status) {
     });
 }
 
-// Load orders from both serverless function and localStorage with improved error handling
+// Load orders from serverless function
 async function loadAllOrders() {
-    console.log('Loading all orders from both server and localStorage');
+    console.log('Loading orders from server');
     const ordersTableBody = document.getElementById('ordersTableBody');
     
     if (!ordersTableBody) {
@@ -182,78 +182,35 @@ async function loadAllOrders() {
             </tr>
         `;
         
-        // Attempt to fetch orders from Netlify function using our new API utils
-        let serverOrders = [];
-        const serverFetchFailed = { failed: false, reason: '' };
+        // Fetch orders from the API
+        const adminToken = sessionStorage.getItem('adminToken') || 
+                           `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         
-        try {
-            console.log('Fetching server orders using API utils');
-            
-            // Použití nové API utility pro volání serverless funkce
-            const result = await window.apiUtils.callFunction('admin-orders');
-            
-            if (result && result.orders) {
-                serverOrders = result.orders;
-                console.log(`✅ Successfully fetched ${serverOrders.length} orders from server`);
+        const response = await fetch('/.netlify/functions/get-orders', {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
             }
-            
-        } catch (apiError) {
-            console.error('API fetch error:', apiError);
-            serverFetchFailed.failed = true;
-            serverFetchFailed.reason = apiError.message || 'Network error';
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
         }
         
-        // Get local orders from localStorage
-        const localOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-        console.log(`Found ${localOrders.length} orders in localStorage`);
+        const data = await response.json();
+        const orders = data.orders || [];
         
-        // Remove test order creation - let system show empty state when no orders exist
-        
-        // Combine server and local orders using a Map to deduplicate
-        const orderMap = new Map();
-        
-        // Add server orders to map
-        serverOrders.forEach(order => {
-            orderMap.set(String(order.id), {
-                ...order,
-                source: order.source || 'server'
-            });
-        });
-        
-        // Add local orders to map (will overwrite server orders with same ID)
-        localOrders.forEach(order => {
-            if (!orderMap.has(String(order.id))) {
-                orderMap.set(String(order.id), {
-                    ...order,
-                    source: order.source || 'local'
-                });
-            }
-        });
-        
-        // Convert map back to array and filter out deleted server orders
-        const allOrders = Array.from(orderMap.values()).filter(order => {
-            const deletedServerOrders = JSON.parse(localStorage.getItem('deletedServerOrders') || '[]');
-            return !(order.id.startsWith('SERVER-') && deletedServerOrders.includes(order.id));
-        });
-        console.log(`Combined total: ${allOrders.length} orders after filtering deleted server orders`);
+        console.log(`Received ${orders.length} orders from server`);
         
         // Clear loading indicator
         ordersTableBody.innerHTML = '';
         
-        // Show server fetch error if applicable
-        if (serverFetchFailed.failed) {
-            const errorRow = document.createElement('tr');
-            errorRow.innerHTML = `
-                <td colspan="6" class="server-error-message">
-                    ⚠️ Server connection failed: ${serverFetchFailed.reason}
-                    <br>Showing local orders only
-                    <br><small>If you've just deployed the site, the functions may need a few minutes to activate.</small>
-                </td>
-            `;
-            ordersTableBody.appendChild(errorRow);
+        // Update stats display if available
+        if (data.stats && document.getElementById('databaseStats')) {
+            updateStatsDisplay(data.stats);
         }
         
-        if (allOrders.length === 0) {
+        if (orders.length === 0) {
             // Show no orders message
             ordersTableBody.innerHTML = `
                 <tr>
@@ -264,12 +221,12 @@ async function loadAllOrders() {
         }
         
         // Sort orders by timestamp (newest first)
-        allOrders.sort((a, b) => {
+        orders.sort((a, b) => {
             return (b.timestamp || 0) - (a.timestamp || 0);
         });
         
         // Add each order to the table
-        allOrders.forEach(order => {
+        orders.forEach(order => {
             const row = document.createElement('tr');
             
             // Generate a short ID if needed
@@ -278,32 +235,18 @@ async function loadAllOrders() {
             // Determine status class
             let statusClass = order.status || 'preordered';
             
-            // Highlight the source for debugging
-            const sourceClass = order.source === 'server' || order.source === 'server-test' ? 'server-source' : 'local-source';
-            
-            // Enhanced date-time formatting with better debug logging
+            // Enhanced date-time formatting
             let dateTimeFormatted = 'N/A';
             try {
-                if (order.date) {
-                    const orderDate = new Date(order.date);
-                    console.log(`Order ${shortId} date value:`, order.date);
-                    console.log(`Parsed date object:`, orderDate);
-                    
-                    dateTimeFormatted = orderDate.toLocaleString('en-US', {
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric',
-                        hour: '2-digit', 
-                        minute: '2-digit'
-                    });
-                    console.log(`Formatted date-time:`, dateTimeFormatted);
-                }
+                const orderDate = new Date(order.timestamp || order.date);
+                dateTimeFormatted = orderDate.toLocaleString();
             } catch (dateError) {
-                console.error(`Error formatting date for order ${shortId}:`, dateError);
+                console.error('Error formatting date:', dateError);
+                dateTimeFormatted = order.date || 'Unknown Date';
             }
             
             row.innerHTML = `
-                <td class="${sourceClass}">#ORD-${shortId}</td>
+                <td>#ORD-${shortId}</td>
                 <td>${order.customer || 'Unknown'}</td>
                 <td class="order-datetime">${dateTimeFormatted}</td>
                 <td>${order.items ? order.items.length : 0}</td>
@@ -315,7 +258,6 @@ async function loadAllOrders() {
                         <button class="btn-status ${statusClass === 'added' ? 'active' : ''}" data-id="${order.id}" data-status="added">Added in order</button>
                         <button class="btn-status ${statusClass === 'paid' ? 'active' : ''}" data-id="${order.id}" data-status="paid">Paid</button>
                     </div>
-                    <button class="btn-delete" data-id="${order.id}" title="Delete order"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             ordersTableBody.appendChild(row);
@@ -324,41 +266,6 @@ async function loadAllOrders() {
         // Add event listeners to buttons
         setupOrderButtons();
         
-        // Add CSS to highlight sources
-        const styleEl = document.createElement('style');
-        styleEl.textContent = `
-            .server-source { position: relative; }
-            .server-source:after { 
-                content: "Server"; 
-                position: absolute; 
-                top: 0; 
-                right: 0; 
-                font-size: 8px; 
-                background: #4a90e2; 
-                color: white; 
-                padding: 2px 4px; 
-                border-radius: 3px; 
-            }
-            .local-source { position: relative; }
-            .local-source:after { 
-                content: "Local"; 
-                position: absolute; 
-                top: 0; 
-                right: 0; 
-                font-size: 8px; 
-                background: #888; 
-                color: white; 
-                padding: 2px 4px; 
-                border-radius: 3px; 
-            }
-            .server-error-message {
-                background-color: #fff3cd; 
-                color: #856404; 
-                padding: 15px; 
-                text-align: center; 
-            }
-        `;
-        document.head.appendChild(styleEl);
     } catch (error) {
         console.error('Error loading orders:', error);
         ordersTableBody.innerHTML = `
@@ -367,6 +274,24 @@ async function loadAllOrders() {
             </tr>
         `;
     }
+}
+
+// Helper function to update stats display
+function updateStatsDisplay(stats) {
+    const statsDisplay = document.getElementById('databaseStats');
+    if (!statsDisplay) return;
+    
+    let html = `<strong>Total Orders:</strong> ${stats.totalOrders}`;
+    
+    if (stats.statuses) {
+        html += '<div class="status-breakdown">';
+        for (const [status, count] of Object.entries(stats.statuses)) {
+            html += `<span class="status-badge ${status}">${status}: ${count}</span>`;
+        }
+        html += '</div>';
+    }
+    
+    statsDisplay.innerHTML = html;
 }
 
 function setupOrderButtons() {
@@ -388,9 +313,7 @@ function setupOrderButtons() {
             // Update active status on buttons
             const parentStatusOptions = this.closest('.status-options');
             if (parentStatusOptions) {
-                parentStatusOptions.querySelectorAll('.btn-status').forEach(b => {
-                    b.classList.remove('active');
-                });
+                parentStatusOptions.querySelectorAll('.btn-status').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
             }
         });
@@ -785,54 +708,43 @@ function setupModalStatusButtons(modal, orderId) {
     }
 }
 
-// Update order status on both localStorage and server
+// Update order status via API
 async function updateOrderStatus(orderId, status) {
     console.log('Updating order status:', orderId, status);
     
     try {
-        // Update in localStorage first
-        const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-        const orderIndex = submittedOrders.findIndex(order => order.id == orderId);
+        const adminToken = sessionStorage.getItem('adminToken') || 
+                          `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         
-        if (orderIndex !== -1) {
-            submittedOrders[orderIndex].status = status;
-            localStorage.setItem('submittedOrders', JSON.stringify(submittedOrders));
-            console.log('Order status updated in localStorage');
+        const response = await fetch('/.netlify/functions/update-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({
+                orderId: orderId,
+                status: status
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
         }
         
-        // Try to update on server using API utils
-        try {
-            console.log('Updating order status via API utils');
-            
-            const result = await window.apiUtils.callFunction('update-order', {
-                method: 'POST',
-                body: JSON.stringify({
-                    orderId: orderId,
-                    status: status
-                })
-            });
-            
-            if (result && result.success) {
-                console.log('Order status updated on server');
-            } else {
-                console.warn('Server update failed, but local update succeeded');
-            }
-        } catch (apiError) {
-            console.error('API error during status update:', apiError);
-        }
+        const result = await response.json();
         
-        // Refresh the orders table
-        setTimeout(() => loadAllOrders(), 500);
+        if (result.success) {
+            showToast(`Order status updated to ${status}`, 'success');
+            // Refresh the orders list
+            setTimeout(() => loadAllOrders(), 500);
+        } else {
+            showToast(result.message || 'Status update failed', 'error');
+        }
     } catch (error) {
         console.error('Error updating order status:', error);
-        alert('Error updating order status: ' + error.message);
+        showToast(`Error: ${error.message}`, 'error');
     }
-}
-
-function editOrder(orderId) {
-    // Implementation will be added later
-    console.log('Editing order:', orderId);
-    alert('Order editing will be available in a future update');
 }
 
 // Toast notification function
@@ -1263,3 +1175,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Make sync function globally available
 window.syncLocalOrders = syncLocalOrders;
+window.loadAllOrders = loadAllOrders;
+window.showToast = showToast;

@@ -1,8 +1,11 @@
 const corsHelpers = require('./utils/cors-headers');
-const orderDb = require('./utils/order-database');
+
+// Configuration
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SHEETS_API_URL || 
+  'https://script.google.com/macros/s/AKfycbzM_OOO2LIYgLl9RqdRJFVsayk1-h0uH-zKFDIn2tj92ODWCSXsOvxy9GdKDyldOaTM/exec';
 
 exports.handler = async function(event, context) {
-  // Handle OPTIONS requests
+  // Handle OPTIONS preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return corsHelpers.handleOptions();
   }
@@ -13,9 +16,12 @@ exports.handler = async function(event, context) {
   }
   
   // Check authorization
-  const token = event.headers.authorization;
-  if (!token || !token.startsWith('Bearer ')) {
-    return corsHelpers.createResponse(401, { error: "Unauthorized" });
+  const authHeader = event.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return corsHelpers.createResponse(401, { 
+      error: "Unauthorized",
+      message: "Valid Bearer token required" 
+    });
   }
   
   try {
@@ -28,61 +34,44 @@ exports.handler = async function(event, context) {
     
     console.log(`Fetching order details for ID: ${orderId}`);
     
-    // First try to get the order from our database
-    let order = orderDb.getOrderById(orderId);
-    
-    // If found in database, return it
-    if (order) {
-      console.log(`Order ${orderId} found in database`);
-      return corsHelpers.createResponse(200, { order });
-    }
-    
-    // If not found but starts with SERVER-, generate mock data
-    if (orderId.startsWith('SERVER-')) {
-      // Use the existing code to generate a mock server order
-      const idNumber = parseInt(orderId.replace('SERVER-', '')) || Date.now();
-      const seedValue = idNumber % 10000;
-      
-      order = {
-        id: orderId,
-        customer: `Customer ${seedValue % 100}`,
-        email: `customer${seedValue % 100}@example.com`,
-        phone: `+420 ${(seedValue % 900) + 100} ${(seedValue % 900) + 100} ${(seedValue % 900) + 100}`,
-        date: new Date(Date.now() - (seedValue * 60000)).toISOString(),
-        timestamp: Date.now() - (seedValue * 60000),
-        status: ["preordered", "added", "paid"][seedValue % 3],
-        source: "server",
-        items: [
-          { 
-            name: ["Jersey Classic", "Jersey Pro", "Jersey Elite"][seedValue % 3], 
-            gender: ["Men", "Women", "Unisex"][seedValue % 3], 
-            size: ["S", "M", "L", "XL"][seedValue % 4] 
-          },
-          { 
-            name: ["Bibs Basic", "Bibs Pro", "Bibs Elite"][seedValue % 3], 
-            gender: ["Men", "Women", "Unisex"][(seedValue + 1) % 3], 
-            size: ["S", "M", "L", "XL"][(seedValue + 1) % 4] 
-          }
-        ]
-      };
-      
-      // Add random third item sometimes
-      if (seedValue % 5 === 0) {
-        order.items.push({
-          name: "Cycling Cap",
-          gender: "Unisex",
-          size: "One Size"
-        });
+    // Fetch from Google Apps Script with the order ID
+    const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getOrder&id=${encodeURIComponent(orderId)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
-      
-      return corsHelpers.createResponse(200, { order });
+    });
+    
+    if (!response.ok) {
+      console.error(`Google Sheets API error: ${response.status}`);
+      throw new Error(`Google Sheets API responded with status ${response.status}`);
     }
     
-    // Order not found
-    return corsHelpers.createResponse(404, { 
-      error: "Order not found", 
-      message: "Order ID not recognized" 
-    });
+    // Parse the response
+    const data = await response.json();
+    
+    if (!data.order) {
+      return corsHelpers.createResponse(404, { 
+        error: "Order not found", 
+        message: "Order ID not recognized" 
+      });
+    }
+    
+    // Process the order
+    const row = data.order;
+    const order = {
+      id: row.ID || orderId,
+      customer: row.Name || 'Unknown',
+      email: row.Email || '',
+      phone: row.Phone || '',
+      items: parseItems(row.Items),
+      timestamp: row.Timestamp ? new Date(row.Timestamp).getTime() : Date.now(),
+      date: row.Timestamp || new Date().toISOString(),
+      status: extractStatus(row.Items) || 'preordered',
+      source: 'googlesheets'
+    };
+    
+    return corsHelpers.createResponse(200, { order });
   } catch (error) {
     console.error("Error fetching order:", error);
     return corsHelpers.createResponse(500, { 
@@ -91,3 +80,50 @@ exports.handler = async function(event, context) {
     });
   }
 };
+
+/**
+ * Parse Items JSON string from Google Sheets
+ */
+function parseItems(itemsStr) {
+  if (!itemsStr) return [];
+  
+  try {
+    // Try to parse as JSON
+    const items = JSON.parse(itemsStr);
+    return Array.isArray(items) ? items : [items];
+  } catch (e) {
+    // If not valid JSON, return as a single item
+    return [{
+      name: itemsStr,
+      gender: 'Unknown',
+      size: 'Unknown'
+    }];
+  }
+}
+
+/**
+ * Extract status from Items if available
+ */
+function extractStatus(itemsStr) {
+  if (!itemsStr) return null;
+  
+  try {
+    // Try to find status in the JSON
+    const data = JSON.parse(itemsStr);
+    
+    // If it's directly in the parsed object
+    if (data.status) return data.status;
+    
+    // If it's in metadata
+    if (data.metadata && data.metadata.status) return data.metadata.status;
+    
+    // If we have an order_status field
+    if (data.order_status) return data.order_status;
+    
+    return null;
+  } catch (e) {
+    // Try regex as a fallback
+    const statusMatch = /["`']?status["`']?\s*[:=]\s*["`']?([^"'`,}\]]+)/i.exec(itemsStr);
+    return statusMatch ? statusMatch[1].trim().toLowerCase() : null;
+  }
+}

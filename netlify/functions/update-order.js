@@ -1,5 +1,8 @@
 const corsHelpers = require('./utils/cors-headers');
-const orderDb = require('./utils/order-database');
+
+// Configuration
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SHEETS_API_URL || 
+  'https://script.google.com/macros/s/AKfycbzM_OOO2LIYgLl9RqdRJFVsayk1-h0uH-zKFDIn2tj92ODWCSXsOvxy9GdKDyldOaTM/exec';
 
 exports.handler = async function(event, context) {
   // Handle OPTIONS requests
@@ -29,23 +32,39 @@ exports.handler = async function(event, context) {
     
     console.log(`Order status update: ID ${data.orderId} to ${data.status}`);
     
-    // Try to update the order in our database
-    const updatedOrder = orderDb.updateOrderStatus(data.orderId, data.status);
+    // Send update to Google Apps Script
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'updateOrderStatus',
+        id: data.orderId,
+        status: data.status
+      })
+    });
     
-    if (updatedOrder) {
+    if (!response.ok) {
+      console.error(`Google Sheets API error: ${response.status}`);
+      throw new Error(`Google Sheets API responded with status ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
       console.log(`Order ${data.orderId} status updated to ${data.status}`);
       return corsHelpers.createResponse(200, { 
         success: true,
         message: "Order status updated",
         orderId: data.orderId,
-        status: data.status,
-        order: updatedOrder
+        status: data.status
       });
     } else {
-      console.log(`Order ${data.orderId} not found for status update`);
-      return corsHelpers.createResponse(404, { 
-        error: "Order not found", 
-        message: `Order ${data.orderId} not found` 
+      console.log(`Failed to update order ${data.orderId}: ${result.message}`);
+      return corsHelpers.createResponse(400, { 
+        error: "Update failed", 
+        message: result.message || "Could not update order status" 
       });
     }
   } catch (error) {
