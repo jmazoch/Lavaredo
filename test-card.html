@@ -112,6 +112,9 @@
                 <button id="debugStorageBtn" style="background-color: #fbbc05; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Debug Storage
                 </button>
+                <button id="testFilesBtn" style="background-color: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Test Files
+                </button>
                 <button id="checkMessagesBtn" style="background-color: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                     Check Messages
                 </button>
@@ -255,6 +258,72 @@ ${data.orders.count > 0 ? `Latest Order: ${JSON.stringify(data.orders.latest, nu
                 responseInfo.textContent = formattedOutput;
             } catch (error) {
                 responseInfo.textContent = `Error checking messages: ${error.message}`;
+            }
+        });
+        
+        // Add new test files button
+        const testFilesBtn = document.getElementById('testFilesBtn');
+        testFilesBtn.addEventListener('click', async function() {
+            try {
+                responseInfo.textContent = 'Testing file system access...';
+                
+                // Generate admin token
+                const adminToken = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                
+                // Call the test-files endpoint
+                const response = await fetch('/.netlify/functions/test-files', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Format the output nicely
+                let formattedOutput = 'File System Test Results:\n\n';
+                
+                // Environment info
+                formattedOutput += `Node: ${data.environment.nodeVersion}\n`;
+                formattedOutput += `Platform: ${data.environment.platform}\n`;
+                formattedOutput += `Working Directory: ${data.environment.cwd}\n\n`;
+                
+                // Test locations
+                formattedOutput += 'Storage Locations:\n\n';
+                
+                for (const [location, result] of Object.entries(data.locations)) {
+                    formattedOutput += `${location}: ${result.exists ? 'EXISTS' : 'NOT FOUND'}\n`;
+                    
+                    if (result.exists) {
+                        if (result.isFile) {
+                            formattedOutput += `  - File size: ${result.fileSize || 'unknown'}\n`;
+                            if (result.isValidJson) {
+                                formattedOutput += `  - Valid JSON: ${result.objectType} with ${result.itemCount} items\n`;
+                            }
+                        } else if (result.isDirectory) {
+                            formattedOutput += `  - Directory with ${result.fileCount} files\n`;
+                            if (result.files && result.files.length > 0) {
+                                formattedOutput += `  - Contents: ${result.files.join(', ')}\n`;
+                            }
+                        }
+                    }
+                    formattedOutput += '\n';
+                }
+                
+                // Write test
+                formattedOutput += 'Write Test:\n';
+                if (data.writeTest.error) {
+                    formattedOutput += `Failed: ${data.writeTest.error}\n`;
+                } else {
+                    const testFile = Object.keys(data.writeTest)[0];
+                    formattedOutput += `File: ${testFile}\n`;
+                    formattedOutput += `Success: ${data.writeTest[testFile].success}\n`;
+                    formattedOutput += `File exists after write: ${data.writeTest[testFile].exists}\n`;
+                }
+                
+                responseInfo.textContent = formattedOutput;
+            } catch (error) {
+                responseInfo.textContent = `Error testing files: ${error.message}`;
             }
         });
         

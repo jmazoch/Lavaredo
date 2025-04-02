@@ -42,6 +42,9 @@ function saveOrdersInternal(orders) {
  * @returns {Object} The saved order with ID
  */
 exports.saveOrder = function(order) {
+  // Log the operation for debugging
+  console.log(`Attempting to save order: ${order.id}`);
+  
   // Ensure order has an ID and timestamp
   if (!order.id) {
     order.id = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -69,6 +72,14 @@ exports.saveOrder = function(order) {
     orders.push(order);
     const saveResult = saveOrdersInternal(orders);
     console.log(`Order saved to database: ${order.id}, save result: ${saveResult}`);
+    
+    // Also directly save to persistent store as a backup method
+    try {
+      persistentStore.addOrder(order);
+      console.log(`Order also directly saved to persistent store: ${order.id}`);
+    } catch (err) {
+      console.error(`Failed direct save to persistent store: ${err.message}`);
+    }
   } else {
     console.log(`Order ${order.id} already exists in database`);
   }
@@ -84,7 +95,22 @@ exports.saveOrder = function(order) {
  * @returns {Array} All orders
  */
 exports.getAllOrders = function() {
-  return getAllOrdersInternal();
+  // Log the call for debugging
+  console.log('getAllOrders called');
+  
+  // Force a reset of the cache to ensure fresh data
+  ordersCache = null;
+  
+  // Get orders from persistent store
+  const orders = getAllOrdersInternal();
+  console.log(`Retrieved ${orders.length} orders from database`);
+  
+  // Print the first few orders for debugging
+  if (orders.length > 0) {
+    console.log(`First order: ${JSON.stringify(orders[0]).substring(0, 100)}...`);
+  }
+  
+  return orders;
 };
 
 /**

@@ -1,6 +1,5 @@
 /**
  * Persistent storage utility for Netlify Functions
- * Enhanced with more detailed logging and fallbacks
  */
 
 const fs = require('fs');
@@ -9,9 +8,10 @@ const path = require('path');
 // Define multiple potential storage paths with fallbacks
 const STORAGE_PATHS = [
     '/tmp',
-    './.netlify/data', // Some Netlify configs might use this
-    './.netlify/temp', // Another possible location
-    path.join(__dirname, '../../../.data') // Local development fallback
+    './.netlify/tmp',
+    './.netlify/data',
+    path.join(__dirname, '../../../.tmp'),
+    path.join(__dirname, '../../../.data')
 ];
 const ORDERS_FILE = 'orders.json';
 const MEMORY_STORE = { orders: [] }; // In-memory fallback
@@ -50,7 +50,7 @@ const STORAGE_DIR = findWritableStorageDir();
  * @param {Array} data - The data to save
  */
 exports.saveOrders = function(data) {
-    // Always update in-memory store
+    // Always update in-memory store first
     MEMORY_STORE.orders = [...data];
     console.log(`In-memory store updated with ${data.length} orders`);
     
@@ -60,15 +60,25 @@ exports.saveOrders = function(data) {
             const filePath = path.join(STORAGE_DIR, ORDERS_FILE);
             const jsonData = JSON.stringify(data);
             
-            // Log key information about what we're saving - FIX THE SYNTAX ERROR HERE
+            // Log key information about what we're saving
             console.log(`Saving ${data.length} orders to ${filePath}, data size: ${jsonData.length} bytes`);
             
+            // Write to file
             fs.writeFileSync(filePath, jsonData);
             
-            // Verify the file was saved correctly
+            // Double-check the file was created
             if (fs.existsSync(filePath)) {
                 const stats = fs.statSync(filePath);
                 console.log(`Save successful. File size: ${stats.size} bytes`);
+                
+                // List directory contents for debugging
+                try {
+                    const dirContents = fs.readdirSync(STORAGE_DIR);
+                    console.log(`Directory ${STORAGE_DIR} contents: ${dirContents.join(', ')}`);
+                } catch (e) {
+                    console.error(`Error listing directory: ${e.message}`);
+                }
+                
                 return true;
             } else {
                 console.error('File does not exist after save attempt');
@@ -89,6 +99,8 @@ exports.saveOrders = function(data) {
  * @returns {Array} The loaded data
  */
 exports.loadOrders = function() {
+    console.log('loadOrders called, storage dir:', STORAGE_DIR);
+    
     // Try to load from file system first
     if (STORAGE_DIR) {
         try {
@@ -96,10 +108,12 @@ exports.loadOrders = function() {
             
             console.log(`Attempting to load orders from ${filePath}`);
             
+            // First check if file exists
             if (fs.existsSync(filePath)) {
                 const stats = fs.statSync(filePath);
                 console.log(`Found orders file. Size: ${stats.size} bytes, Modified: ${stats.mtime}`);
                 
+                // Read the file
                 const data = fs.readFileSync(filePath, 'utf8');
                 
                 if (!data || data.trim() === '') {
@@ -107,15 +121,30 @@ exports.loadOrders = function() {
                     return [];
                 }
                 
-                const orders = JSON.parse(data);
-                console.log(`Successfully parsed ${orders.length} orders from file`);
-                
-                // Update memory store
-                MEMORY_STORE.orders = [...orders];
-                
-                return orders;
+                // Try to parse the JSON
+                try {
+                    const orders = JSON.parse(data);
+                    console.log(`Successfully parsed ${orders.length} orders from file`);
+                    
+                    // Update memory store
+                    MEMORY_STORE.orders = [...orders];
+                    
+                    return orders;
+                } catch (parseError) {
+                    console.error(`Failed to parse orders JSON: ${parseError.message}`);
+                    // Continue to fallback
+                }
             } else {
                 console.log('Orders file does not exist, returning empty array');
+                
+                // Create an empty file for future use
+                try {
+                    fs.writeFileSync(filePath, '[]');
+                    console.log(`Created empty orders file at ${filePath}`);
+                } catch (writeError) {
+                    console.error(`Failed to create empty orders file: ${writeError.message}`);
+                }
+                
                 return [];
             }
         } catch (error) {
@@ -127,24 +156,63 @@ exports.loadOrders = function() {
     }
     
     // Fall back to in-memory store
+    console.log(`Falling back to memory store with ${MEMORY_STORE.orders.length} orders`);
     return MEMORY_STORE.orders;
 };
 
 /**
  * Add a single order to storage
- * @param {Object} order - The order to add
- * @returns {Boolean} Success status
+ * This is a more direct approach that doesn't require loading all orders first
  */
 exports.addOrder = function(order) {
-  const orders = this.loadOrders();
-  // Check if order with this ID already exists
-  const exists = orders.some(o => o.id === order.id);
-  
-  if (!exists) {
-    orders.push(order);
-    return this.saveOrders(orders);
-  }
-  return false;
+    if (!order || !order.id) {
+        console.log('Cannot add invalid order');
+        return false;
+    }
+    
+    console.log(`Direct addOrder called for ${order.id}`);
+    
+    // Always update in-memory store
+    const memoryOrders = MEMORY_STORE.orders.filter(o => o.id !== order.id);
+    memoryOrders.push(order);
+    MEMORY_STORE.orders = memoryOrders;
+    
+    // Try to write to file system if available
+    if (!STORAGE_DIR) {
+        return false;
+    }
+    
+    try {
+        const filePath = path.join(STORAGE_DIR, ORDERS_FILE);
+        
+        // Read existing orders or start with empty array
+        let orders = [];
+        try {
+            if (fs.existsSync(filePath)) {
+                const data = fs.readFileSync(filePath, 'utf8');
+                if (data && data.trim() !== '') {
+                    orders = JSON.parse(data);
+                }
+            }
+        } catch (readError) {
+            console.error(`Error reading orders file: ${readError.message}`);
+        }
+        
+        // Filter out any existing order with same ID
+        orders = orders.filter(o => o.id !== order.id);
+        
+        // Add the new order
+        orders.push(order);
+        
+        // Write back to file
+        fs.writeFileSync(filePath, JSON.stringify(orders));
+        console.log(`Direct save of order ${order.id} successful`);
+        
+        return true;
+    } catch (error) {
+        console.error(`Error in direct order save: ${error.message}`);
+        return false;
+    }
 };
 
 /**
