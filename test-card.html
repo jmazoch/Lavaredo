@@ -3,412 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lavaredo - Order Test Card</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Simple Test Card</title>
     <style>
         body {
-            font-family: 'Montserrat', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-        }
-        .test-card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 30px;
-            margin-top: 40px;
-        }
-        h1 {
             text-align: center;
-            margin-bottom: 30px;
-            font-weight: 500;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: inherit;
-            font-size: 16px;
-        }
-        .items-container {
-            margin-top: 20px;
-            border: 1px solid #eee;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .items-container h3 {
-            margin-top: 0;
-        }
-        .test-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-        .item-info {
-            flex-grow: 1;
-        }
-        .item-actions {
-            display: flex;
-            gap: 10px;
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            background-color: #f8f8f8;
         }
         .btn {
-            background-color: #333;
+            background-color: #4A90E2;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        .btn-primary {
-            background-color: #4A90E2;
-        }
-        .btn-success {
-            background-color: #4CAF50;
-        }
-        .btn-danger {
-            background-color: #F44336;
-        }
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        .actions-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .status-box {
+            font-size: 16px;
             margin-top: 20px;
-            padding: 15px;
-            background-color: #f5f5f5;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
             border-radius: 4px;
             display: none;
         }
-        .status-success {
-            background-color: #e8f5e9;
-            border-left: 4px solid #4CAF50;
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        .status-error {
-            background-color: #ffebee;
-            border-left: 4px solid #F44336;
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         .device-id {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #eee;
+            background-color: #eee;
             padding: 5px 10px;
             border-radius: 15px;
-            font-size: 12px;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        .loading .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #4A90E2;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #viewDashboardLink {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
+    <h1>Test Message Sender</h1>
+    
     <div class="device-id">Device ID: <span id="deviceId"></span></div>
     
-    <h1>Lavaredo Order Test Card</h1>
-    
-    <div class="test-card">
-        <form id="testOrderForm">
-            <div class="form-group">
-                <label for="customerName">Customer Name</label>
-                <input type="text" id="customerName" name="customerName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerEmail">Customer Email</label>
-                <input type="email" id="customerEmail" name="customerEmail" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerPhone">Customer Phone</label>
-                <input type="tel" id="customerPhone" name="customerPhone">
-            </div>
-            
-            <div class="items-container">
-                <h3>Order Items</h3>
-                <div id="itemsList"></div>
-                
-                <button type="button" id="addItemBtn" class="btn">
-                    <i class="fas fa-plus"></i> Add Random Item
-                </button>
-            </div>
-            
-            <div class="actions-row">
-                <button type="button" id="randomizeBtn" class="btn btn-primary">
-                    <i class="fas fa-random"></i> Generate Random Order
-                </button>
-                
-                <button type="submit" id="submitOrderBtn" class="btn btn-success">
-                    <i class="fas fa-paper-plane"></i> Submit Test Order
-                </button>
-                
-                <button type="button" id="clearFormBtn" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Clear Form
-                </button>
-            </div>
-        </form>
+    <div class="card">
+        <h2>Send a Test Message</h2>
+        <p>Click the button to send a "Hello World" message to the dashboard</p>
         
-        <div id="orderStatus" class="status-box"></div>
+        <button id="sendButton" class="btn">Send Hello World</button>
         
-        <div id="loadingIndicator" class="loading">
-            <div class="spinner"></div>
-            <p>Processing order...</p>
-        </div>
+        <div id="status" class="status"></div>
     </div>
     
-    <a href="test-dashboard.html" id="viewDashboardLink">View Orders Dashboard</a>
+    <p style="margin-top: 20px;">
+        <a href="test-dashboard.html">View Dashboard</a>
+    </p>
 
     <script>
-        // Generate and set a device ID
-        const deviceId = `DEV-${Math.random().toString(36).substring(2, 8)}`;
+        // Generate a simple device ID and display it
+        const deviceId = localStorage.getItem('testDeviceId') || 
+                         `DEVICE-${Math.floor(Math.random() * 1000)}`;
         document.getElementById('deviceId').textContent = deviceId;
         localStorage.setItem('testDeviceId', deviceId);
         
-        // Get DOM elements
-        const form = document.getElementById('testOrderForm');
-        const itemsList = document.getElementById('itemsList');
-        const randomizeBtn = document.getElementById('randomizeBtn');
-        const addItemBtn = document.getElementById('addItemBtn');
-        const clearFormBtn = document.getElementById('clearFormBtn');
-        const statusBox = document.getElementById('orderStatus');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        
-        // Sample data for random generation
-        const sampleProducts = [
-            { name: 'Jersey Classic', gender: 'Men', sizes: ['S', 'M', 'L', 'XL'] },
-            { name: 'Jersey Pro', gender: 'Women', sizes: ['S', 'M', 'L'] },
-            { name: 'Bibs Basic', gender: 'Men', sizes: ['S', 'M', 'L', 'XL'] },
-            { name: 'Bibs Elite', gender: 'Women', sizes: ['S', 'M', 'L'] },
-            { name: 'Cycling Cap', gender: 'Unisex', sizes: ['One Size'] },
-            { name: 'Arm Warmers', gender: 'Unisex', sizes: ['S/M', 'L/XL'] },
-            { name: 'Wind Vest', gender: 'Men', sizes: ['S', 'M', 'L', 'XL'] }
-        ];
-        
-        const sampleNames = [
-            'John Doe', 'Jane Smith', 'Michael Brown', 'Emma Wilson', 
-            'David Miller', 'Sarah Johnson', 'James Taylor', 'Lisa Davis'
-        ];
-        
-        const sampleEmails = [
-            'test1@example.com', 'test2@example.com', 'test3@example.com',
-            'customer1@test.com', 'customer2@test.com'
-        ];
-        
-        // Helper functions
-        function randomArrayItem(array) {
-            return array[Math.floor(Math.random() * array.length)];
-        }
-        
-        function generateRandomItem() {
-            const product = randomArrayItem(sampleProducts);
-            
-            return {
-                name: product.name,
-                gender: product.gender,
-                size: randomArrayItem(product.sizes)
-            };
-        }
-        
-        function addItemToList(item) {
-            const itemElement = document.createElement('div');
-            itemElement.className = 'test-item';
-            itemElement.innerHTML = `
-                <div class="item-info">
-                    <strong>${item.name}</strong>
-                    <div>${item.gender} - Size ${item.size}</div>
-                </div>
-                <div class="item-actions">
-                    <button type="button" class="remove-item btn btn-danger">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            const removeButton = itemElement.querySelector('.remove-item');
-            removeButton.addEventListener('click', function() {
-                itemElement.remove();
-            });
-            
-            itemsList.appendChild(itemElement);
-        }
-        
-        function clearForm() {
-            form.reset();
-            itemsList.innerHTML = '';
-        }
-        
-        function showStatus(message, isSuccess) {
-            statusBox.textContent = message;
-            statusBox.className = 'status-box';
-            
-            if (isSuccess) {
-                statusBox.classList.add('status-success');
-            } else {
-                statusBox.classList.add('status-error');
-            }
-            
-            statusBox.style.display = 'block';
-            
-            // Auto-hide after 10 seconds
-            setTimeout(() => {
-                statusBox.style.display = 'none';
-            }, 10000);
-        }
-        
-        // Event handlers
-        addItemBtn.addEventListener('click', function() {
-            addItemToList(generateRandomItem());
-        });
-        
-        randomizeBtn.addEventListener('click', function() {
-            // Clear form first
-            clearForm();
-            
-            // Set random customer info
-            document.getElementById('customerName').value = randomArrayItem(sampleNames);
-            document.getElementById('customerEmail').value = randomArrayItem(sampleEmails);
-            document.getElementById('customerPhone').value = `+420 ${Math.floor(100 + Math.random() * 900)} ${Math.floor(100 + Math.random() * 900)} ${Math.floor(100 + Math.random() * 900)}`;
-            
-            // Add 1-3 random items
-            const itemCount = Math.floor(Math.random() * 3) + 1;
-            for (let i = 0; i < itemCount; i++) {
-                addItemToList(generateRandomItem());
-            }
-        });
-        
-        clearFormBtn.addEventListener('click', clearForm);
-        
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Gather form data
-            const customerName = document.getElementById('customerName').value;
-            const customerEmail = document.getElementById('customerEmail').value;
-            const customerPhone = document.getElementById('customerPhone').value;
-            
-            // Gather items
-            const items = [];
-            const itemElements = itemsList.querySelectorAll('.test-item');
-            
-            if (itemElements.length === 0) {
-                showStatus('Please add at least one item to the order', false);
-                return;
-            }
-            
-            itemElements.forEach(itemElement => {
-                const itemInfo = itemElement.querySelector('.item-info');
-                const name = itemInfo.querySelector('strong').textContent;
-                const details = itemInfo.querySelector('div').textContent;
-                const [gender, sizeText] = details.split(' - ');
-                const size = sizeText.replace('Size ', '');
-                
-                items.push({
-                    name,
-                    gender, 
-                    size,
-                    image: 'img/jerseys/jersey1.jpg' // Placeholder image
-                });
-            });
-            
-            // Create order data
-            const orderData = {
-                id: `TEST-${deviceId}-${Date.now()}`,
-                customer: customerName,
-                email: customerEmail,
-                phone: customerPhone,
-                items,
-                date: new Date().toISOString(),
-                timestamp: Date.now(),
-                status: 'preordered',
-                source: 'test-card',
-                deviceId
-            };
-            
-            // Show loading indicator
-            loadingIndicator.style.display = 'block';
-            statusBox.style.display = 'none';
+        // Set up the send button
+        document.getElementById('sendButton').addEventListener('click', async function() {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = "Sending message...";
+            statusElement.className = "status";
+            statusElement.style.display = "block";
             
             try {
-                // Submit order to server
+                // Create a simple message with timestamp
+                const message = {
+                    id: `MSG-${Date.now()}`,
+                    text: "Hello World",
+                    deviceId: deviceId,
+                    timestamp: Date.now()
+                };
+                
+                // Send to the server
                 const response = await fetch('/.netlify/functions/submit-order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify(message)
                 });
                 
                 const result = await response.json();
                 
-                // Hide loading indicator
-                loadingIndicator.style.display = 'none';
-                
                 if (response.ok) {
-                    showStatus(`Order submitted successfully! Order ID: ${result.orderId || orderData.id}`, true);
-                    clearForm(); // Clear form on success
+                    statusElement.textContent = "Message sent successfully!";
+                    statusElement.className = "status success";
                 } else {
-                    showStatus(`Error: ${result.error || 'Failed to submit order'}`, false);
+                    statusElement.textContent = `Error: ${result.error || 'Failed to send message'}`;
+                    statusElement.className = "status error";
                 }
             } catch (error) {
-                loadingIndicator.style.display = 'none';
-                showStatus(`Connection error: ${error.message}. Please try again.`, false);
-                console.error('Order submission error:', error);
+                statusElement.textContent = `Connection error: ${error.message}`;
+                statusElement.className = "status error";
+                console.error('Error sending message:', error);
             }
         });
-        
-        // Initialize with a random item
-        addItemToList(generateRandomItem());
     </script>
 </body>
 </html>
