@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Test Card</title>
+    <title>Simple Test Card - Debug Version</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -53,6 +53,39 @@
             margin-bottom: 20px;
             display: inline-block;
         }
+        .debug-panel {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: left;
+            background-color: #f0f0f0;
+        }
+        .request-info, .response-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow: auto;
+            font-size: 12px;
+        }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .debug-title {
+            font-weight: bold;
+            margin: 0;
+        }
+        .debug-controls {
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -69,18 +102,67 @@
         <div id="status" class="status"></div>
     </div>
     
+    <div class="debug-panel">
+        <div class="debug-header">
+            <h3 class="debug-title">Debug Information</h3>
+            <div class="debug-controls">
+                <button id="testServerBtn" style="background-color: #34a853; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Test Server
+                </button>
+                <button id="clearLogBtn" style="background-color: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Clear Log
+                </button>
+            </div>
+        </div>
+        <div>
+            <strong>Request:</strong>
+            <div class="request-info" id="requestInfo">No request sent yet</div>
+        </div>
+        <div>
+            <strong>Response:</strong>
+            <div class="response-info" id="responseInfo">No response received yet</div>
+        </div>
+    </div>
+    
     <p style="margin-top: 20px;">
         <a href="test-dashboard.html">View Dashboard</a>
     </p>
 
     <script>
+        // Debug elements
+        const requestInfo = document.getElementById('requestInfo');
+        const responseInfo = document.getElementById('responseInfo');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const testServerBtn = document.getElementById('testServerBtn');
+        
+        // Clear log button
+        clearLogBtn.addEventListener('click', function() {
+            requestInfo.textContent = 'No request sent yet';
+            responseInfo.textContent = 'No response received yet';
+        });
+        
+        // Test server connection
+        testServerBtn.addEventListener('click', async function() {
+            try {
+                responseInfo.textContent = 'Testing server connection...';
+                
+                // Simple fetch to test-function to verify server is responding
+                const response = await fetch('/.netlify/functions/test-function');
+                const data = await response.json();
+                
+                responseInfo.textContent = `Server test: ${response.ok ? 'SUCCESS' : 'FAILED'}\n\nStatus: ${response.status} ${response.statusText}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                responseInfo.textContent = `Server test error: ${error.message}\n\nThis indicates there may be a server connection problem or CORS issue.`;
+            }
+        });
+        
         // Generate a simple device ID and display it
         const deviceId = localStorage.getItem('testDeviceId') || 
                          `DEVICE-${Math.floor(Math.random() * 1000)}`;
         document.getElementById('deviceId').textContent = deviceId;
         localStorage.setItem('testDeviceId', deviceId);
         
-        // Set up the send button
+        // Set up the send button with enhanced debugging
         document.getElementById('sendButton').addEventListener('click', async function() {
             const statusElement = document.getElementById('status');
             statusElement.textContent = "Sending message...";
@@ -105,7 +187,11 @@
                     }]
                 };
                 
+                // Display request info
+                requestInfo.textContent = `Endpoint: /.netlify/functions/submit-order\nMethod: POST\nData:\n${JSON.stringify(message, null, 2)}`;
+                
                 // Send to the server
+                console.log('Sending message to server:', message);
                 const response = await fetch('/.netlify/functions/submit-order', {
                     method: 'POST',
                     headers: {
@@ -114,19 +200,41 @@
                     body: JSON.stringify(message)
                 });
                 
-                const result = await response.json();
+                // Get response text first (in case it's not valid JSON)
+                const responseText = await response.text();
+                console.log('Server response text:', responseText);
+                
+                let result;
+                try {
+                    // Try to parse as JSON
+                    result = JSON.parse(responseText);
+                    console.log('Server response object:', result);
+                } catch (e) {
+                    console.error('Failed to parse response as JSON:', e);
+                    result = { error: 'Invalid JSON response', rawResponse: responseText };
+                }
+                
+                // Display response info
+                responseInfo.textContent = `Status: ${response.status} ${response.statusText}\nHeaders: ${JSON.stringify(Object.fromEntries([...response.headers]), null, 2)}\nResponse Body:\n${responseText}`;
                 
                 if (response.ok) {
-                    statusElement.textContent = "Message sent successfully!";
+                    statusElement.textContent = `Message sent successfully! Order ID: ${result.orderId || 'Unknown'}`;
                     statusElement.className = "status success";
+                    
+                    // Store the message in localStorage for dashboard testing
+                    const savedMessages = JSON.parse(localStorage.getItem('testMessages') || '[]');
+                    savedMessages.push({...message, serverResponse: result});
+                    localStorage.setItem('testMessages', JSON.stringify(savedMessages));
+                    console.log('Message saved to localStorage for testing');
                 } else {
                     statusElement.textContent = `Error: ${result.error || 'Failed to send message'}`;
                     statusElement.className = "status error";
                 }
             } catch (error) {
+                console.error('Error sending message:', error);
                 statusElement.textContent = `Connection error: ${error.message}`;
                 statusElement.className = "status error";
-                console.error('Error sending message:', error);
+                responseInfo.textContent = `Error: ${error.message}\n\nStack: ${error.stack}`;
             }
         });
     </script>
