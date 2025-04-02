@@ -82,23 +82,50 @@ class DashboardController {
         
         try {
             // Try to fetch data from Google Sheets via Apps Script
+            console.log('Fetching orders from API:', CONFIG.API_URL + '?action=getOrders');
             const response = await fetch(CONFIG.API_URL + '?action=getOrders');
             
             if (!response.ok) {
+                console.error(`API error: ${response.status} ${response.statusText}`);
                 throw new Error(`API returned status ${response.status}`);
             }
             
-            const data = await response.json();
+            // Get the raw text for debugging
+            const responseText = await response.text();
+            console.log('API raw response:', responseText.substring(0, 200) + '...');
             
-            // Check if we got valid data with rows
-            if (!data.rows || !Array.isArray(data.rows)) {
+            // Try to parse as JSON
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                throw new Error('Invalid JSON from API');
+            }
+            
+            console.log('Parsed API response:', data);
+            
+            // Check for rows data (or try to use the data directly if it's an array)
+            let rows = data.rows;
+            if (!rows) {
+                if (Array.isArray(data)) {
+                    console.log('API returned direct array, using that instead');
+                    rows = data;
+                } else {
+                    console.error('No rows property found in API response');
+                    throw new Error('Invalid data format from API');
+                }
+            }
+            
+            if (!Array.isArray(rows)) {
+                console.error('Rows is not an array');
                 throw new Error('Invalid data format from API');
             }
             
-            console.log(`Fetched ${data.rows.length} orders from API`);
+            console.log(`Fetched ${rows.length} orders from API`);
             
             // Process the orders
-            this.orders = this.processOrderData(data.rows);
+            this.orders = this.processOrderData(rows);
             this.filteredOrders = [...this.orders];
             
             // Hide error message if it was shown
@@ -172,7 +199,12 @@ class DashboardController {
     
     // Process raw order data from the API
     processOrderData(rows) {
+        console.log('Raw rows from API:', rows);
+        
         return rows.map(row => {
+            // Generate an ID if missing - your sheet doesn't have an ID column
+            const generatedId = `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+            
             // Parse Items JSON if it's a string
             let items = [];
             if (row.Items) {
@@ -187,10 +219,10 @@ class DashboardController {
                 }
             }
             
-            // Create standardized order object
+            // Create standardized order object - match your sheet's column names
             return {
-                id: row.ID || `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-                customer: row.Name || 'Unknown',
+                id: row.ID || generatedId,
+                customer: row.Name || 'Unknown',  // Your sheet has "Name" not "Customer"
                 email: row.Email || '',
                 phone: row.Phone || '',
                 items: items,
