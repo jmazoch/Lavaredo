@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 10,
             name: 'Antartica grey Vest',
-            czechName: 'Vesta',
+            czechName: 'Vesta Antarctica Grey',
             description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná. Osvědčený model z předchozí sezóny.',
             image: 'gallery/vest1.webp',
             category: 'vests',
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 11,
             name: 'Black Vest',
-            czechName: 'Vesta',
+            czechName: 'Vesta Black',
             description: 'Černá vesta s reflexními prvky. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
             image: 'gallery/vest2.webp',
             category: 'vests',
