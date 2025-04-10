@@ -1174,3 +1174,45 @@ footer {
     display: none;
 }
 
+/* Potvrzení o přidání produktu do košíku */
+.cart-confirmation {
+    position: fixed;
+    bottom: 30px;
+    right: -300px;
+    background-color: rgba(56, 142, 60, 0.9);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+}
+
+.cart-confirmation p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.cart-confirmation.show {
+    right: 30px;
+}
+
+/* Pro mobilní zařízení */
+@media (max-width: 768px) {
+    .cart-confirmation {
+        bottom: 20px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) translateY(100px);
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
+    }
+    
+    .cart-confirmation.show {
+        right: auto;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
