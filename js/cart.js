@@ -598,17 +598,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update cart UI
             updateCartUI();
             
-            // Remove alert message - no notification needed
             // Close the modal after adding to cart
             const productModal = document.getElementById('productModal');
             if (productModal) {
                 productModal.style.display = 'none';
+                
+                // DŮLEŽITÁ OPRAVA: Obnovit scrollování, které bylo zakázáno při otevření modálu
+                document.body.style.overflow = '';
             }
+            
+            // Zobrazit potvrzení o přidání do košíku
+            showAddToCartConfirmation();
         });
     } else {
         console.error('Tlačítko přidat do košíku nebylo nalezeno!');
     }
     
+    // Nová funkce pro zobrazení potvrzení o přidání do košíku
+    function showAddToCartConfirmation() {
+        const confirmation = document.createElement('div');
+        confirmation.className = 'cart-confirmation';
+        confirmation.innerHTML = '<p>Produkt byl přidán do předobjednávky</p>';
+        
+        document.body.appendChild(confirmation);
+        
+        // Animace zobrazení
+        setTimeout(() => {
+            confirmation.classList.add('show');
+        }, 10);
+        
+        // Automatické skrytí po 3 sekundách
+        setTimeout(() => {
+            confirmation.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(confirmation);
+            }, 300); // Počkat na dokončení animace skrytí
+        }, 3000);
+    }
+
     // Ensure localStorage is cleared of any stale admin sessions
     function clearStaleAdminData() {
         try {
