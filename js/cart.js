@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showAddToCartConfirmation() {
         const confirmation = document.createElement('div');
         confirmation.className = 'cart-confirmation';
-        confirmation.innerHTML = '<p>Produkt byl přidán do předobjednávky</p>';
+        confirmation.innerHTML = '<p>Produkt byl přidán do košíku</p>';
         
         document.body.appendChild(confirmation);
         
