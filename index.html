@@ -12,6 +12,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jacquard+24&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Skrytí cen, košíku a tlačítek pro přidání do košíku */
+        .jersey-price, 
+        .product-price,
+        .cart-icon, 
+        .add-to-cart-btn, 
+        .cart-dropdown,
+        .sizes-container {
+            display: none !important;
+        }
+        .gender-options {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Login Overlay - Changed from "active" to not show immediately -->
@@ -56,19 +70,7 @@
                 <ul class="nav-links">
                     <li><a href="#filters">Produkty</a></li>
                     <li><a href="#about">O nás</a></li>
-                    <!-- Account icon removed -->
-                    <li class="cart-icon">
-                        <a href="cart.html" id="cartBtn"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
-                        <div class="cart-dropdown">
-                            <div class="cart-items">
-                                <!-- Will be populated by JS -->
-                            </div>
-                            <div class="cart-total">
-                                <p>Total Items: <span id="cartTotalItems">0</span></p>
-                            </div>
-                            <a href="cart.html" class="view-cart-btn">View Cart</a>
-                        </div>
-                    </li>
+                    <!-- Košík je skrytý pomocí CSS -->
                 </ul>
                 <!-- Burger menu toggle button -->
                 <div class="mobile-menu-toggle">
@@ -178,19 +180,20 @@
                     <p id="modalProductDescription"></p>
                     <div class="product-category" id="modalProductCategory"></div>
                     
-                    <!-- Přidání zobrazení ceny -->
+                    <!-- Cena je skrytá pomocí CSS -->
                     <div class="product-price" id="modalProductPrice"></div>
                     
                     <!-- Add Size Chart Button Here -->
                     <button id="sizeChartBtn" class="size-chart-btn">Size Chart</button>
                     
-                    <!-- Size Selection -->
+                    <!-- Size Selection je skrytá pomocí CSS -->
                     <div class="size-selection">
-                        <h3>Pohlaví</h3>
                         <div class="gender-options">
                             <button class="gender-btn" data-gender="Men">Pánské</button>
                             <button class="gender-btn" data-gender="Wmn">Dámské</button>
                         </div>
+                        
+
                         <div class="sizes-container" style="display: none;">
                             <h3>Velikost</h3>
                             <div class="size-options">
