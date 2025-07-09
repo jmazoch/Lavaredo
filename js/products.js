@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Krátký dres Mauve',
             description: 'Opera mauve růžový dres dostupný v pánských i dámských velikostech. Lehký letní materiál s reflexními prvky na bocích a zadní kapse pro lepší viditelnost.',
             image: 'gallery/jersey1.webp',
-            category: 'jersey'
+            category: 'jersey',
+            price: '1290 Kč'
         },
         {
             id: 2,
@@ -33,15 +34,17 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Krátký dres Dark Navy',
             description: 'Tmavě modrý dres s reflexními prvky. Stejný design jako u dlouhého dresu, ideální volba jako hlavní dres sezóny. Kvalitní prodyšný materiál vhodný i pro náročné výkony.',
             image: 'gallery/jersey2.webp',
-            category: 'jersey'
+            category: 'jersey',
+            price: '1290 Kč'
         },      
         {
             id: 3,
-            name: 'Limited Jersey',
-            czechName: 'Krátký dres Limited Edition',
-            description: 'Limitovaná edice. Unikátní design. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
+            name: 'White Jersey',
+            czechName: 'Krátký dres white',
+            description: 'Na horké letní vyjížďky. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
             image: 'gallery/jersey3.webp',
-            category: 'jersey'
+            category: 'jersey',
+            price: '1290Kč'
         },    
         {
             id: 6,
@@ -49,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Dlouhý dres Dark Navy',
             description: 'Dlouhý dres z letně-podzimního materiálu s reflexními prvky na boku a zadní kapse. Osvědčený model vhodný pro chladnější dny, oblíbený pro svou univerzálnost.',
             image: 'gallery/long_jersey1.webp',
-            category: 'long_sleeve'
+            category: 'long_sleeve',
+            price: '1390 Kč'
         },
         {
             id: 7,
@@ -57,7 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Classic black Bib Shorts',
             description: 'Klasické černé kratasy s gumou, upravené designem se světlými reflexními prvky. Osvědčený model z předchozí sezóny, s italskou vložkou.',
             image: 'gallery/bib1.webp',
-            category: 'bibs'
+            category: 'bibs',
+            price: '1490 Kč'
         },
         {
             id: 8,
@@ -65,7 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Classic dark blue Bib Shorts',
             description: 'Tmavě modrá varianta kratasů s reflexními prvky a kvalitní italskou vložkou. Designově podobné černé variantě, ale v nové barevné kombinaci.',
             image: 'gallery/bib2.webp',
-            category: 'bibs'
+            category: 'bibs',
+            price: '1499 Kč'
         },
         {
             id: 9,
@@ -73,7 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Mocha Bib Shorts bez lemu',
             description: 'Mocha barva kratasů, které nemají na konci nohavic klasický lem s gumou, zakončení je hladké a plynule přechází do látky – tzv. „do ztracena". Premium materiál testovaný minulou sezónu s jemnými reflexními detaily. Lehce kompresní efekt podobný S-lab Salamon.',
             image: 'gallery/bib3.webp',
-            category: 'bibs'
+            category: 'bibs',
+            price: '1599 Kč'
         },
         {
             id: 10,
@@ -81,7 +88,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Vesta Antarctica Grey',
             description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná. Osvědčený model z předchozí sezóny.',
             image: 'gallery/vest1.webp',
-            category: 'vests'
+            category: 'vests',
+            price: '1190 Kč'
         },
         {
             id: 11,
@@ -89,7 +97,8 @@ document.addEventListener('DOMContentLoaded', function() {
             czechName: 'Vesta Black',
             description: 'Černá vesta s reflexními prvky. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
             image: 'gallery/vest2.webp',
-            category: 'vests'
+            category: 'vests',
+            price: '1190 Kč'
         }
     ];
 
@@ -240,6 +249,12 @@ document.addEventListener('DOMContentLoaded', function() {
         modalProductName.textContent = product.czechName || product.name;
         modalProductDescription.textContent = product.description;
         modalProductCategory.textContent = formatCategoryName(product.category);
+        
+        // Add price to the modal
+        const priceElement = document.getElementById('modalProductPrice');
+        if (priceElement) {
+            priceElement.textContent = product.price || '';
+        }
         
         // Create thumbnails
         imageThumbnails.innerHTML = '';
