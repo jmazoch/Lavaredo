@@ -6,26 +6,11 @@
     <title>lavaredo.cc</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/product-modal.css">
-    <!-- Add link to size chart CSS -->
-    <link rel="stylesheet" href="css/size-chart.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/size-chart.css">
     <link href="https://fonts.googleapis.com/css2?family=Jacquard+24&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        /* Skrytí cen, košíku a tlačítek pro přidání do košíku */
-        .jersey-price, 
-        .product-price,
-        .cart-icon, 
-        .add-to-cart-btn, 
-        .cart-dropdown,
-        .sizes-container {
-            display: none !important;
-        }
-        .gender-options {
-            display: none !important;
-        }
-    </style>
 </head>
 <body>
     <!-- Login Overlay - Changed from "active" to not show immediately -->
@@ -70,7 +55,19 @@
                 <ul class="nav-links">
                     <li><a href="#filters">Produkty</a></li>
                     <li><a href="#about">O nás</a></li>
-                    <!-- Košík je skrytý pomocí CSS -->
+                    <!-- Account icon removed -->
+                    <li class="cart-icon">
+                        <a href="cart.html" id="cartBtn"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+                        <div class="cart-dropdown">
+                            <div class="cart-items">
+                                <!-- Will be populated by JS -->
+                            </div>
+                            <div class="cart-total">
+                                <p>Total Items: <span id="cartTotalItems">0</span></p>
+                            </div>
+                            <a href="cart.html" class="view-cart-btn">View Cart</a>
+                        </div>
+                    </li>
                 </ul>
                 <!-- Burger menu toggle button -->
                 <div class="mobile-menu-toggle">
@@ -89,7 +86,8 @@
         </header>
 
         <div class="intro">
-            <!-- <h3>! <em>Předobjednávky se budou uzavírat kolem 13.4.2025!</em> !</h3> -->
+            <h3>! <em>Doobjednávky uzavíráme v neděli 13.7.2025!</em> !</h3>  
+          
         </div>
 
         <section id="filters">
@@ -146,19 +144,19 @@
                         <div class="footer-logo">
                             <img src="logos/lavaredo_logo.png" alt="Lavaredo">
                         </div>
-                        <p>Design, který jede – objevte naše nejlepší cyklistické dresy</p>
+                        <p>Showcasing the finest cycling jersey designs</p>
                         <p>Email: 3dilavaredo@gmail.com</p>
                     </div>
                     <div class="footer-links">
-                        <h3>Sleduj nás</h3>
+                        <!--<h3>Follow Us</h3>
                         <div class="social-links">
                             <a href="https://www.instagram.com/lavaredo.cc/">Instagram</a>
                             <a href="https://strava.app.link/rJVl9icTJRb">Strava</a>
-                        </div>
+                        </div>-->
                     </div>
                 </div>
                 <div class="copyright">
-                    <p>&copy; 2025 Lavaredo. All rights reserved.</p>
+                    <p>&copy; 2024 Lavaredo. All rights reserved.</p>
                 </div>
             </div>
         </footer>
@@ -180,11 +178,8 @@
                     <p id="modalProductDescription"></p>
                     <div class="product-category" id="modalProductCategory"></div>
                     
-                    <!-- Cena je skrytá pomocí CSS -->
-                    <div class="product-price" id="modalProductPrice"></div>
-                    
                     <!-- Add Size Chart Button Here -->
-                    <button id="sizeChartBtn" class="size-chart-btn">Size Chart</button>
+                    <button id="sizeChartBtn" class="size-chart-btn">Tabulka velikostí</button>
                     
                     <!-- Size Selection je skrytá pomocí CSS -->
                     <div class="size-selection">
@@ -205,7 +200,7 @@
                                 <button class="size-btn" data-size="XXL">XXL</button>
                             </div>
                         </div>
-                        <button id="addToCartBtn" class="add-to-cart-btn disabled">Přidat do předobjednávky</button>
+                        <button id="addToCartBtn" class="add-to-cart-btn disabled">Add to Pre-order</button>
                     </div>
                 </div>  
                 <div class="similar-products">
@@ -213,23 +208,6 @@
                         <!-- Similar products will be added dynamically -->
                     </div>                
                 </div>          
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Size Chart Modal -->
-    <div id="sizeChartModal" class="size-chart-modal">
-        <div class="size-chart-content">
-            <span class="close-size-chart">&times;</span>
-            <div class="size-chart-header">
-                <h2 id="sizeChartTitle">Tabulka velikostí</h2>
-                <div class="size-chart-tabs">
-                    <button id="mensTab" class="tab-button active">Pánské velikosti</button>
-                    <button id="womensTab" class="tab-button">Dámské velikosti</button>
-                </div>
-            </div>
-            <div id="sizeChartTableContainer" class="size-chart-table-container">
-                <!-- Table will be generated dynamically -->
             </div>
         </div>
     </div>
@@ -243,15 +221,31 @@
       <input type="text" name="orderId" />
     </form>
 
+    <!-- Size Chart Modal -->
+    <div id="sizeChartModal" class="size-chart-modal">
+        <div class="size-chart-content">
+            <span class="close-size-chart">&times;</span>
+            <div class="size-chart-header">
+                <h2 id="sizeChartTitle">Tabulka velikostí</h2>
+                <div class="size-chart-tabs">
+                    <button id="mensTab" class="tab-button active">Pánské</button>
+                    <button id="womensTab" class="tab-button">Dámské</button>
+                </div>
+            </div>
+            <div class="size-chart-table-container" id="sizeChartTableContainer">
+                <!-- Size chart table will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Add this before your existing scripts -->
     <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <script src="js/config.js"></script>
     <script src="js/core.js"></script>
-    <!-- Add size chart script BEFORE products.js -->
-    <script src="js/sizeChart.js"></script>
     <script src="js/products.js"></script>
     <script src="js/scrollNav.js"></script>
     <script src="js/sizeSelection.js"></script>
+    <script src="js/sizeChart.js"></script>
     <script src="js/ridersKlan.js"></script>
     <script src="js/script.js"></script>
     <script src="js/productModal.js"></script>

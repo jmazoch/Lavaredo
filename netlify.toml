@@ -1,36 +1,49 @@
+functionsDirectory = "C:\\Users\\mazoc\\Downloads\\web_last\\web\\cycling-gallery\\functions"
+functionsDirectoryOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+headers = []
+
 [build]
-  publish = "."
-  functions = "netlify/functions"
-  
+publish = "C:\\Users\\mazoc\\Downloads\\web_last\\web\\cycling-gallery"
+publishOrigin = "config"
+functions = "C:\\Users\\mazoc\\Downloads\\web_last\\web\\cycling-gallery\\functions"
+
+  [build.environment]
+
+  [build.processing]
+
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]
+
 [dev]
-  functions = "netlify/functions"
+functions = "functions"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true
+[template]
 
-# Improved CORS setup for all paths
-[[headers]]
-  for = "/*"
-    [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-
-# Specific headers for functions
-[[headers]]
-  for = "/.netlify/functions/*"
-    [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Content-Type = "application/json"
+  [template.environment]
+  ADMIN_EMAIL = "honzamazoch@email.cz"
 
 [functions]
-  directory = "netlify/functions"
+
+  [functions."*"]
   node_bundler = "esbuild"
 
-[template.environment]
-  ADMIN_EMAIL = "honzamazoch@email.cz"
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/:splat"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]

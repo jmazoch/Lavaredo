@@ -22,74 +22,65 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 1,
             name: 'Mauve Jersey',
-            czechName: 'Krátký dres Mauve',
             description: 'Opera mauve růžový dres dostupný v pánských i dámských velikostech. Lehký letní materiál s reflexními prvky na bocích a zadní kapse pro lepší viditelnost.',
             image: 'gallery/jersey1.webp',
-            category: 'jersey'
+            category: 'jersey',
         },
         {
             id: 2,
             name: 'Dark navy Jersey',
-            czechName: 'Krátký dres Dark Navy',
             description: 'Tmavě modrý dres s reflexními prvky. Stejný design jako u dlouhého dresu, ideální volba jako hlavní dres sezóny. Kvalitní prodyšný materiál vhodný i pro náročné výkony.',
             image: 'gallery/jersey2.webp',
-            category: 'jersey'
+            category: 'jersey',
         },      
         {
             id: 3,
-            name: 'Limited Jersey',
-            czechName: 'Krátký dres Limited Edition',
-            description: 'Limitovaná edice. Unikátní design. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
+            name: 'White Jersey',
+            description: 'Bílý dres na horké letní vyjížďky. Doporučujeme jako doplňkový dres k tmavě modrým nebo růžovým variantám.',
             image: 'gallery/jersey3.webp',
-            category: 'jersey'
+            category: 'jersey',
         },    
         {
             id: 6,
             name: 'Dark navy Long Jersey',
-            czechName: 'Dlouhý dres Dark Navy',
             description: 'Dlouhý dres z letně-podzimního materiálu s reflexními prvky na boku a zadní kapse. Osvědčený model vhodný pro chladnější dny, oblíbený pro svou univerzálnost.',
             image: 'gallery/long_jersey1.webp',
-            category: 'long_sleeve'
+            category: 'long_sleeve',
         },
         {
             id: 7,
             name: 'Classic black Bib Shorts',
-            czechName: 'Classic black Bib Shorts',
-            description: 'Klasické černé kratasy s gumou, upravené designem se světlými reflexními prvky. Osvědčený model z předchozí sezóny, s italskou vložkou.',
+            description: 'Klasické černé kratasy s gumou, upravené designem se světlými reflexními nápisy. Osvědčený model z předchozí sezóny s italskou/belgickou vložkou.',
             image: 'gallery/bib1.webp',
-            category: 'bibs'
+            category: 'bibs',
         },
         {
             id: 8,
             name: 'Classic dark blue Bib Shorts',
-            czechName: 'Classic dark blue Bib Shorts',
             description: 'Tmavě modrá varianta kratasů s reflexními prvky a kvalitní italskou vložkou. Designově podobné černé variantě, ale v nové barevné kombinaci.',
             image: 'gallery/bib2.webp',
-            category: 'bibs'
+            category: 'bibs',
         },
         {
             id: 9,
-            name: 'Mocha Bib Shorts without rubber bands',
-            czechName: 'Mocha Bib Shorts bez lemu',
-            description: 'Mocha barva kratasů, které nemají na konci nohavic klasický lem s gumou, zakončení je hladké a plynule přechází do látky – tzv. „do ztracena". Premium materiál testovaný minulou sezónu s jemnými reflexními detaily. Lehce kompresní efekt podobný S-lab Salamon.',
+            name: 'Olive green Bib Shorts without rubber bands',
+            description: 'Mocha barva kratasů bez koncové gumy (without paperband). Premium materiál testovaný minulou sezónu s jemnými reflexními detaily (dvě téměř neviditelné čárky vzadu). Lehce kompresní efekt podobný S-lab Salamon.',
             image: 'gallery/bib3.webp',
-            category: 'bibs'
+            category: 'bibs',
         },
         {
             id: 10,
             name: 'Antartica grey Vest',
-            czechName: 'Vesta Antarctica Grey',
-            description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná. Osvědčený model z předchozí sezóny.',
+            description: 'Antarctica Grey vesta s novým reflexním prvkem vzadu. Lehká a větruodolná, s možností výběru mezi verzí s jedním nebo dvěma zipy. Osvědčený model z předchozí sezóny.',
             image: 'gallery/vest1.webp',
-            category: 'vests'
+            category: 'vests',
         },
         {
             id: 11,
             name: 'Black Vest',
-            czechName: 'Vesta Black',
-            description: 'Černá vesta s reflexními prvky. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
+            description: 'Černá vesta s reflexními prvky, dostupná ve dvou verzích zipu. Větruodolná a prodyšná, ideální pro proměnlivé počasí. Strategické větrání a snadné skladování.',
             image: 'gallery/vest2.webp',
-            category: 'vests'
+            category: 'vests',
         }
     ];
 
@@ -120,8 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const infoDiv = document.createElement('div');
             infoDiv.className = 'jersey-info';
             infoDiv.innerHTML = `
-                <h3>${jersey.czechName || jersey.name}</h3>
-                <p class="jersey-description">${jersey.description}</p>
+                <h3>${jersey.name}</h3>
+                <p>${jersey.description}</p>
             `;
             
             // Add hover functionality
@@ -237,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set main product details
         modalMainImage.src = product.image;
         modalMainImage.alt = product.name;
-        modalProductName.textContent = product.czechName || product.name;
+        modalProductName.textContent = product.name;
         modalProductDescription.textContent = product.description;
         modalProductCategory.textContent = formatCategoryName(product.category);
         
@@ -278,24 +269,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const similarItem = createSimilarProductItem(similarProduct);
             similarProductsContainer.appendChild(similarItem);
         });
-        
-        // Initialize size chart button
-        const sizeChartBtn = document.getElementById('sizeChartBtn');
-        if (sizeChartBtn) {
-            // Determine product type for size chart
-            const productType = product.category === 'bibs' ? 'shorts' : 'jerseys';
-            
-            // Set up click handler with direct function call
-            sizeChartBtn.onclick = function() {
-                console.log('Size chart button clicked for:', productType);
-                window.openSizeChartModal(productType);
-            };
-        }
-        
-        // Dispatch event for other modules
-        document.dispatchEvent(new CustomEvent('productModalOpened', {
-            detail: { product: product }
-        }));
         
         // Show modal
         productModal.style.display = 'block';

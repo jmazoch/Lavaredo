@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cartItems.innerHTML = '';
             
             if (cart.length === 0) {
-                cartItems.innerHTML = '<div class="empty-cart">Váš košík je prázdný</div>';
+                cartItems.innerHTML = '<div class="empty-cart">Your cart is empty</div>';
             } else {
                 // Add each item to cart dropdown
                 cart.forEach((item, index) => {
@@ -106,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="cart-item-details">
                             <div class="cart-item-name">${item.name}</div>
                             <div class="cart-item-size">${item.gender || ''} ${item.size}</div>
-                            <div class="cart-item-price">${item.price || ''}</div>
                         </div>
                         <div class="cart-item-remove" data-index="${index}">×</div>
                     `;
@@ -149,40 +148,12 @@ document.addEventListener('DOMContentLoaded', function() {
             summaryTotalItems.textContent = cart.length;
         }
         
-        // Calculate total price
-        let totalPrice = 0;
-        cart.forEach(item => {
-            if (item.price) {
-                // Extract number from price string (e.g. "999 Kč" -> 999)
-                const priceValue = parseInt(item.price.replace(/[^0-9]/g, ''));
-                if (!isNaN(priceValue)) {
-                    totalPrice += priceValue;
-                }
-            }
-        });
-        
-        // Fixed shipping cost
-        const shippingCost = 150;
-        
-        // Update summary with item price if element exists
-        const summaryTotalPrice = document.getElementById('summaryTotalPrice');
-        if (summaryTotalPrice) {
-            summaryTotalPrice.textContent = `${totalPrice.toLocaleString()} Kč`;
-        }
-        
-        // Update total price with shipping
-        const totalWithShipping = totalPrice + shippingCost;
-        const summaryTotalWithShipping = document.getElementById('summaryTotalWithShipping');
-        if (summaryTotalWithShipping) {
-            summaryTotalWithShipping.textContent = `${totalWithShipping.toLocaleString()} Kč`;
-        }
-        
         // Clear cart items list
         cartItemsList.innerHTML = '';
         
         if (cart.length === 0) {
             // Show empty cart message
-            cartItemsList.innerHTML = '<div class="cart-empty-message">Vaše předobjednávka je prázdná.</div>';
+            cartItemsList.innerHTML = '<div class="cart-empty-message">Your pre-order list is empty.</div>';
             
             // Disable pre-order button
             if (preorderBtn) {
@@ -205,13 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         <img src="${item.image}" alt="${item.name}" class="cart-item-image">
                         <div class="cart-item-info">
                             <h3>${item.name}</h3>
-                            <p>Přidáno: ${item.date || 'Dnes'}</p>
+                            <p>Added to pre-order: ${item.date || 'Today'}</p>
                         </div>
                     </div>
                     <div class="cart-item-size">${item.size}</div>
-                    <div class="cart-item-price">${item.price || ''}</div>
                     <div class="cart-item-actions">
-                        <button class="remove-item" data-index="${index}">Odebrat</button>
+                        <button class="remove-item" data-index="${index}">Remove</button>
                     </div>
                 `;
                 cartItemsList.appendChild(cartItem);
@@ -242,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Generate order ID and timestamp
-            const orderId = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+            const orderId = Math.floor(1000 + Math.random() * 9000);
             const timestamp = new Date().toISOString();
             
             // Prepare order data
@@ -257,119 +227,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: 'preordered'
             };
             
-            console.log('Submitting order to Netlify functions...');
+            // Determine if we're in local development or production
+            const isLocalDev = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1';
             
-            // Show loading indicator
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.className = 'loading-overlay';
-            loadingIndicator.innerHTML = '<div class="spinner"></div><p>Zpracování objednávky...</p>';
-            document.body.appendChild(loadingIndicator);
+            console.log(`Running in ${isLocalDev ? 'local development' : 'production'} mode`);
             
-            // Use relative URL with fallback options
-            const urls = [
-                '/.netlify/functions/submit-order',
-                '/api/submit-order',
-                `${window.location.origin}/.netlify/functions/submit-order`
-            ];
-            
-            let response = null;
-            let error = null;
-            let lastResponseText = '';
-            
-            // Try each URL until one works
-            for (const url of urls) {
+            // In production, try submitting to serverless function
+            if (!isLocalDev) {
                 try {
-                    console.log(`Trying to submit to: ${url}`);
+                    console.log('Submitting order to Netlify function...');
                     
-                    // Add more diagnostic information
-                    console.log('Current location:', window.location.href);
-                    console.log('Origin:', window.location.origin);
-                    console.log('Hostname:', window.location.hostname);
-                    
-                    response = await fetch(url, {
+                    // Use the direct Netlify Functions URL
+                    const response = await fetch('/.netlify/functions/submit-order', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(orderData),
-                        mode: 'cors',
-                        credentials: 'omit'
+                        body: JSON.stringify(orderData)
                     });
                     
-                    console.log(`Response from ${url}: Status ${response.status}`);
+                    // Log response status for debugging
+                    console.log('Function response status:', response.status);
                     
-                    // Save the response text for debugging
-                    try {
-                        lastResponseText = await response.text();
-                        console.log('Response text:', lastResponseText);
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Order submitted successfully:', result);
                         
-                        // Parse the response back
-                        response.parsedBody = JSON.parse(lastResponseText);
-                    } catch (parseError) {
-                        console.warn('Could not parse response body:', parseError);
-                        response.parsedBody = null;
-                    }
-                    
-                    if (response.ok && response.parsedBody) {
-                        console.log(`Success! URL ${url} worked.`);
-                        break; // Exit loop on success
+                        // Also save in localStorage as backup
+                        const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+                        existingOrders.push(orderData);
+                        localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
+                        
+                        // Clear the cart
+                        localStorage.setItem('shopping_cart', JSON.stringify([]));
+                        
+                        return result.orderId || orderId;
                     } else {
-                        console.warn(`URL ${url} returned status: ${response.status}`);
-                        error = `Status: ${response.status}`;
+                        const errorText = await response.text();
+                        console.error('Server error:', response.status, errorText);
+                        throw new Error(`Server returned ${response.status}: ${errorText}`);
                     }
-                } catch (fetchError) {
-                    console.warn(`Error calling ${url}:`, fetchError);
-                    error = fetchError.message;
+                } catch (apiError) {
+                    console.error('Error in API call:', apiError);
+                    
+                    // Fall back to localStorage
+                    console.log('Falling back to localStorage storage');
+                    return saveOrderToLocalStorage(orderData);
                 }
+            } 
+            // In local development, use localStorage directly
+            else {
+                console.log('Local development: Using localStorage directly');
+                return saveOrderToLocalStorage(orderData);
             }
-            
-            // Remove loading indicator
-            document.body.removeChild(loadingIndicator);
-            
-            // Process response or error
-            if (response && response.ok && response.parsedBody) {
-                const result = response.parsedBody;
-                console.log('Order submitted successfully:', result);
-                
-                // Save to localStorage as backup
-                const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-                existingOrders.push({
-                    ...orderData,
-                    serverConfirmed: true,
-                    serverOrderId: result.orderId,
-                    serverTimestamp: result.timestamp
-                });
-                localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
-                
-                // Clear the cart
-                localStorage.setItem('shopping_cart', JSON.stringify([]));
-                
-                return orderData.id;
-            } else {
-                // If server failed but we have data, save locally
-                console.error('Server submission failed:', error || 'Unknown error');
-                console.log('Saving to localStorage as backup');
-                
-                // Store order with failure flag
-                const existingOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
-                existingOrders.push({
-                    ...orderData,
-                    serverConfirmed: false,
-                    error: error || 'Unknown error',
-                    lastResponseText: lastResponseText
-                });
-                localStorage.setItem('submittedOrders', JSON.stringify(existingOrders));
-                
-                // Clear the cart
-                localStorage.setItem('shopping_cart', JSON.stringify([]));
-                
-                alert('Vaše objednávka byla uložena lokálně. Synchronizujeme ji s naším systémem, jakmile bude připojení obnoveno.');
-                
-                return orderData.id;
-            }
-        } catch (error) {
-            console.error('Error in order submission process:', error);
-            alert('Při zpracování objednávky došlo k chybě. Zkuste to prosím znovu nebo kontaktujte podporu.');
+        } catch (e) {
+            console.error('Error in order submission process:', e);
             return null;
         }
     }
@@ -458,25 +371,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!customerName || customerName.value.trim() === '') {
                 isValid = false;
                 customerName.classList.add('error');
-                showFieldError(customerName, 'Zadejte prosím své celé jméno');
+                showFieldError(customerName, 'Please enter your full name');
             }
             
             // Validate email (required and format)
             if (!customerEmail || customerEmail.value.trim() === '') {
                 isValid = false;
                 customerEmail.classList.add('error');
-                showFieldError(customerEmail, 'Zadejte prosím svůj email');
+                showFieldError(customerEmail, 'Please enter your email address');
             } else if (!isValidEmail(customerEmail.value)) {
                 isValid = false;
                 customerEmail.classList.add('error');
-                showFieldError(customerEmail, 'Zadejte platnou emailovou adresu');
+                showFieldError(customerEmail, 'Please enter a valid email address');
             }
             
             // Phone is optional, but validate format if provided
             if (customerPhone && customerPhone.value.trim() !== '' && !isValidPhone(customerPhone.value)) {
                 isValid = false;
                 customerPhone.classList.add('error');
-                showFieldError(customerPhone, 'Zadejte platné telefonní číslo');
+                showFieldError(customerPhone, 'Please enter a valid phone number');
             }
             
             return isValid;
@@ -565,13 +478,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Selected size:', selectedSize);
             
             if (!selectedGender || !selectedSize) {
-                alert('Prosím vyberte pohlaví i velikost');
+                alert('Please select both gender and size');
                 return;
             }
             
             const productName = document.getElementById('modalProductName').textContent;
             const productImage = document.getElementById('modalMainImage').src;
-            const productPrice = document.getElementById('modalProductPrice')?.textContent || '';
             
             console.log('Product name:', productName);
             console.log('Product image:', productImage);
@@ -585,7 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 image: productImage,
                 gender: selectedGender,
                 size: selectedSize,
-                price: productPrice,
                 date: new Date().toISOString().split('T')[0]
             };
             
@@ -598,44 +509,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update cart UI
             updateCartUI();
             
+            // Remove alert message - no notification needed
             // Close the modal after adding to cart
             const productModal = document.getElementById('productModal');
             if (productModal) {
                 productModal.style.display = 'none';
-                
-                // DŮLEŽITÁ OPRAVA: Obnovit scrollování, které bylo zakázáno při otevření modálu
-                document.body.style.overflow = '';
             }
-            
-            // Zobrazit potvrzení o přidání do košíku
-            showAddToCartConfirmation();
         });
     } else {
-        console.error('Tlačítko přidat do košíku nebylo nalezeno!');
+        console.error('Add to cart button not found!');
     }
     
-    // Nová funkce pro zobrazení potvrzení o přidání do košíku
-    function showAddToCartConfirmation() {
-        const confirmation = document.createElement('div');
-        confirmation.className = 'cart-confirmation';
-        confirmation.innerHTML = '<p>Produkt byl přidán do košíku</p>';
-        
-        document.body.appendChild(confirmation);
-        
-        // Animace zobrazení
-        setTimeout(() => {
-            confirmation.classList.add('show');
-        }, 10);
-        
-        // Automatické skrytí po 3 sekundách
-        setTimeout(() => {
-            confirmation.classList.remove('show');
-            setTimeout(() => {
-                document.body.removeChild(confirmation);
-            }, 300); // Počkat na dokončení animace skrytí
-        }, 3000);
-    }
-
     // Ensure localStorage is cleared of any stale admin sessions
     function clearStaleAdminData() {
         try {
@@ -688,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (isSessionAdmin) {
                         console.log('Active admin session detected - showing message');
-                        alert('Administrátorské účty nemohou používat nákupní košík');
+                        alert('Admin accounts do not use the shopping cart');
                         return;
                     }
                     

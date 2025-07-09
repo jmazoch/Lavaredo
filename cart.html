@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaše předobjednávka - Lavaredo</title>
+    <title>Your Pre-order - Lavaredo</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/cart.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,71 +52,53 @@
     <!-- Main Content -->
     <main class="cart-main" id="pageContent">
         <div class="container">
-            <h1>Vaše předobjednávka</h1>
+            <h1>Your Pre-order</h1>
             
             <div class="cart-content">
                 <div class="cart-items-container">
                     <div class="cart-header">
-                        <div class="cart-header-item">Položka</div>
-                        <div class="cart-header-size">Velikost</div>
-                        <div class="cart-header-price">Cena</div>
-                        <div class="cart-header-actions">Akce</div>
+                        <div class="cart-header-item">Item</div>
+                        <div class="cart-header-size">Size</div>
+                        <div class="cart-header-actions">Actions</div>
                     </div>
                     
                     <div id="cartItemsList" class="cart-items-list">
                         <!-- Will be populated by JS -->
-                        <div class="cart-empty-message">Vaše předobjednávka je prázdná.</div>
+                        <div class="cart-empty-message">Your pre-order list is empty.</div>
                     </div>
                 </div>
                 
                 <div class="cart-sidebar">
                     <div class="cart-summary">
-                        <h2>Souhrn předobjednávky</h2>
+                        <h2>Pre-order Summary</h2>
                         <div class="summary-item">
-                            <span>Počet položek:</span>
+                            <span>Total Items:</span>
                             <span id="summaryTotalItems">0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Celková cena:</span>
-                            <span id="summaryTotalPrice">0 Kč</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Odhad dopravy:</span>
-                            <span id="summaryShipping">150 Kč</span>
-                        </div>
-                        <div class="summary-item shipping-note">
-                            <em>Částka za dopravu je pouze orientační. Doprava bude rozpočítána mezi ostatní zákazníky, konečná cena tak může být nižší.</em>
-                        </div>
-                        <div class="summary-item total-with-shipping">
-                            <span>Celkem s dopravou:</span>
-                            <span id="summaryTotalWithShipping">150 Kč</span>
                         </div>
                         
                         <!-- Customer Information Form -->
                         <div class="customer-info-form">
-                            <h3>Kontaktní údaje</h3>
+                            <h3>Your Contact Details</h3>
                             <div class="form-group">
-                                <label for="customerName">Celé jméno</label>
-                                <input type="text" id="customerName" placeholder="Vaše celé jméno" required>
+                                <label for="customerName">Full Name</label>
+                                <input type="text" id="customerName" placeholder="Your full name" required>
                             </div>
                             <div class="form-group">
                                 <label for="customerEmail">Email</label>
-                                <input type="email" id="customerEmail" placeholder="vas@email.cz" required>
+                                <input type="email" id="customerEmail" placeholder="your@email.com" required>
                             </div>
                             <div class="form-group">
-                                <label for="customerPhone">Telefon</label>
+                                <label for="customerPhone">Phone Number</label>
                                 <input type="tel" id="customerPhone" placeholder="+420 xxx xxx xxx">
                             </div>
                         </div>
                         
                         <div class="summary-note">
-                            <p>Toto je pouze předobjednávka cyklistického oblečení – nic se neplatí, jde o orientační ceny.</p>
-                            <p>Pokud ještě nejste členem Lavaredo, ozveme se vám a dáme vědět, zda budete přijati do našeho klanu.</p>
-                            <p>Po odeslání předobjednávky vás budeme kontaktovat s dalšími informacemi.</p>
-
+                            <p>This is a pre-order for custom cycling apparel. No payment is required at this time.</p>
+                            <p>After submitting your pre-order, our team will contact you with details.</p>
                         </div>
-                        <button id="preorderBtn" class="preorder-btn">Odeslat předobjednávku</button>
-                        <button id="continueShoppingBtn" class="continue-shopping-btn">Pokračovat v nákupu</button>
+                        <button id="preorderBtn" class="preorder-btn">Submit Pre-order</button>
+                        <button id="continueShoppingBtn" class="continue-shopping-btn">Continue Shopping</button>
                     </div>
                 </div>
             </div>
@@ -130,25 +112,25 @@
             <div class="success-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h2>Předobjednávka odeslána!</h2>
-            <p>Děkujeme za vaši předobjednávku. Náš tým žádost zpracuje a brzy vás bude kontaktovat.</p>
-            <p>Číslo předobjednávky: <span id="orderNumber"></span></p>
-            <button id="returnToShopBtn" class="return-btn">Zpět do obchodu</button>
+            <h2>Pre-order Submitted!</h2>
+            <p>Thank you for your pre-order. Our team will review your request and contact you shortly.</p>
+            <p>Your pre-order number: <span id="orderNumber"></span></p>
+            <button id="returnToShopBtn" class="return-btn">Return to Shop</button>
         </div>
     </div>
 
-    <footer id="contact">
+    <footer>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-info">
                     <div class="footer-logo">
                         <img src="logos/lavaredo_logo.png" alt="Lavaredo">
                     </div>
-                    <p>Design, který jede – objevte naše nejlepší cyklistické dresy</p>
-                    <p>Email: 3dilavaredo@gmail.com</p>
+                    <p>Showcasing the finest cycling jersey designs</p>
+                    <p>Email: info@lavaredo.com</p>
                 </div>
                 <div class="footer-links">
-                    <h3>Sleduj nás</h3>
+                    <h3>Follow Us</h3>
                     <div class="social-links">
                         <a href="https://www.instagram.com/lavaredo.cc/">Instagram</a>
                         <a href="https://strava.app.link/rJVl9icTJRb">Strava</a>
@@ -156,7 +138,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2025 Lavaredo. All rights reserved.</p>
+                <p>&copy; 2024 Lavaredo. All rights reserved.</p>
             </div>
         </div>
     </footer>
