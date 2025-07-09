@@ -21,30 +21,21 @@ exports.handler = async function(event, context) {
   }
   
   try {
-    // Generate sample data with current timestamp
+    // Generate response with current timestamp but no test orders
     const currentTime = new Date().toISOString();
     console.log('Function executed at:', currentTime);
     
-    // Very simple test response
-    const testResponse = {
+    // Clean response without test data
+    const response = {
       message: "Admin orders function is working!",
       timestamp: currentTime,
-      orders: [
-        {
-          id: "TEST-123",
-          customer: "Test Customer",
-          email: "test@example.com",
-          date: currentTime,
-          status: "test",
-          source: "server-test"
-        }
-      ]
+      orders: [] // Return empty orders array - real orders will come from database
     };
     
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(testResponse)
+      body: JSON.stringify(response)
     };
   } catch (error) {
     console.error("Error in admin-orders function:", error);

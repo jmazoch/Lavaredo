@@ -182,6 +182,18 @@
     background-color: #f5f5f5;
 }
 
+/* Improved date-time display */
+.orders-table td:nth-child(3) {
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+.orders-table td.order-datetime {
+    white-space: nowrap;
+    min-width: 200px;
+    font-size: 0.95rem;
+}
+
 /* Status badges */
 .status-badge {
     display: inline-block;
@@ -280,8 +292,60 @@
     color: #ff9800;
 }
 
+/* Enhanced delete button styling */
 .btn-delete {
     color: #f44336;
+    margin-left: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.btn-delete:hover {
+    color: #d32f2f;
+    transform: scale(1.1);
+}
+
+.btn-delete::after {
+    content: 'Delete';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.btn-delete:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Bulk delete button styling */
+.btn-delete-bulk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #d32f2f;
+    color: white;
+}
+
+.btn-delete-bulk:hover {
+    background-color: #b71c1c;
+    opacity: 0.95;
+    transform: translateY(-2px);
 }
 
 /* Products grid */
@@ -432,6 +496,10 @@
     width: 80px;
 }
 
+.order-info p {
+    margin-bottom: 8px;
+}
+
 .customer-info h3, .order-items h3 {
     margin-bottom: 15px;
     font-size: 1.1rem;
@@ -528,6 +596,276 @@
     background-color: #f9f9f9;
 }
 
+/* Toast notifications */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 250px;
+    max-width: 450px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast-content i {
+    font-size: 1.2rem;
+}
+
+.toast-close {
+    margin-left: 15px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-success {
+    background-color: #4caf50;
+}
+
+.toast-error {
+    background-color: #f44336;
+}
+
+.toast-info {
+    background-color: #2196f3;
+}
+
+/* Loading overlay for order submission */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+.loading-overlay p {
+    color: white;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced delete confirmation modal */
+.delete-confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.delete-confirm-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.delete-confirm-modal.show .confirm-dialog {
+    transform: translateY(0);
+}
+
+.confirm-dialog h3 {
+    margin-bottom: 20px;
+    color: #d32f2f;
+}
+
+.confirm-dialog p {
+    margin-bottom: 25px;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.confirm-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+.confirm-btn:hover {
+    background-color: #d32f2f;
+}
+
+.cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+}
+
+.cancel-btn:hover {
+    background-color: #d5d5d5;
+}
+
+/* Source tag styling */
+.source-tag {
+    display: inline-block;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    color: #333;
+    margin-left: 5px;
+}
+
+.server-source {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.local-source {
+    background-color: #888;
+    color: white;
+}
+
+/* Loading indicator in modal */
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.loading-indicator .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #4a90e2;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loading-indicator p {
+    color: #666;
+}
+
+/* Error message in modal */
+.error-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.error-message .close-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.error-message .close-btn:hover {
+    background-color: #555;
+}
+
+/* Diagnostic info styling */
+.diagnostic-info {
+    background-color: #f8f8f8;
+    border-left: 4px solid #2196f3;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.diagnostic-info ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.diagnostic-info li {
+    margin-bottom: 5px;
+}
+
+.endpoint-info {
+    font-size: 0.85rem;
+    margin-top: 10px;
+    color: #666;
+    font-family: monospace;
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .admin-grid {
@@ -547,4 +885,70 @@
     .search-input {
         width: 100%;
     }
+}
+
+/* Database Management Controls */
+.admin-data-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    align-items: center;
+    border: 1px solid #eee;
+}
+
+.btn-generate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-generate:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: #f44336;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.database-stats {
+    margin-left: auto;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+}
+
+.status-breakdown {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
 }

@@ -50,14 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const womensTab = document.getElementById('womensTab');
     const sizeChartTitle = document.getElementById('sizeChartTitle');
     const sizeChartTableContainer = document.getElementById('sizeChartTableContainer');
-    const sizeChartBtn = document.getElementById('sizeChartBtn');
-    
-    // Add event listener for size chart button
-    if (sizeChartBtn) {
-        sizeChartBtn.addEventListener('click', function() {
-            openSizeChartModal(currentProductType || 'jerseys');
-        });
-    }
     
     // Close modal when clicking close button
     if (closeSizeChart) {
