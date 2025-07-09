@@ -1,5 +1,5 @@
 .size-chart-modal {
-    display: block; /* Změna z 'none' na 'block' pro viditelnost */
+    display: none; /* Skrytá dokud není explicitně otevřena */
     position: fixed;
     z-index: 1100;
     left: 0;
