@@ -13,7 +13,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Jacquard+24&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* E-shop je nyní aktivní - všechny prvky jsou viditelné */
+        /* Disable e-shop functionality - hide cart, prices, and ordering */
+        .jersey-price, 
+        .product-price,
+        .cart-icon, 
+        .add-to-cart-btn, 
+        .cart-dropdown,
+        .sizes-container,
+        .gender-options {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -59,21 +68,7 @@
                 <ul class="nav-links">
                     <li><a href="#filters">Produkty</a></li>
                     <li><a href="#about">O nás</a></li>
-                    <li class="cart-icon" id="cartBtn">
-                        <a href="cart.html">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">0</span>
-                        </a>
-                        <div class="cart-dropdown">
-                            <div class="cart-items">
-                                <!-- Cart items will be populated by JS -->
-                            </div>
-                            <div class="cart-total">
-                                <p>Celkem položek: <span id="cartTotalItems">0</span></p>
-                            </div>
-                            <a href="cart.html" class="view-cart-btn">Zobrazit košík</a>
-                        </div>
-                    </li>
+                    <!-- Cart is hidden via CSS -->
                 </ul>
                 <!-- Burger menu toggle button -->
                 <div class="mobile-menu-toggle">
@@ -92,7 +87,7 @@
         </header>
 
         <div class="intro">
-            <h3>! <em>Předobjednávky se budou uzavírat kolem 13.4.2025!</em> !</h3>    
+            <!--<h3>! <em>Předobjednávky se budou uzavírat kolem 13.4.2025!</em> !</h3> !--> 
         </div>
 
         <section id="filters">
@@ -191,7 +186,7 @@
                     
                     <!-- Size Selection je nyní viditelné -->
                     <div class="size-selection">
-                        <h3>Pohlaví</h3>
+                        <!--<h3>Pohlaví</h3>-->
                         <div class="gender-options">
                             <button class="gender-btn" data-gender="Men">Pánské</button>
                             <button class="gender-btn" data-gender="Wmn">Dámské</button>

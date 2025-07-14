@@ -14,22 +14,27 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Enable order submission for all users (including admins)
+    // Disable order submission for all users
     function handleAdminView() {
-        const isAdmin = sessionStorage.getItem('adminViewingCart') === 'true';
-        if (isAdmin) {
-            console.log('Admin view mode - but keeping order controls visible');
-            // Don't hide preorder button or customer form anymore
-            // Allow admins to test the ordering functionality
-            
-            // Add an admin notice
-            const summaryNote = document.querySelector('.summary-note');
-            if (summaryNote) {
-                const adminNotice = document.createElement('div');
-                adminNotice.className = 'admin-notice';
-                adminNotice.innerHTML = '<p><strong>Admin Mode</strong><br>You can test the ordering functionality.</p>';
-                summaryNote.prepend(adminNotice);
-            }
+        console.log('E-shop functionality disabled - hiding order controls');
+        const preorderBtn = document.getElementById('preorderBtn');
+        const customerInfoForm = document.querySelector('.customer-info-form');
+        
+        if (preorderBtn) {
+            preorderBtn.style.display = 'none';
+        }
+        
+        if (customerInfoForm) {
+            customerInfoForm.style.display = 'none';
+        }
+        
+        // Add a notice that ordering is disabled
+        const summaryNote = document.querySelector('.summary-note');
+        if (summaryNote) {
+            const disabledNotice = document.createElement('div');
+            disabledNotice.className = 'disabled-notice';
+            disabledNotice.innerHTML = '<p><strong>Objednávky jsou momentálně zakázané</strong><br>E-shop je dočasně nedostupný.</p>';
+            summaryNote.prepend(disabledNotice);
         }
     }
     
